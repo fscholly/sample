@@ -1,0 +1,43 @@
+{% extends 'AppBundle:Layout:layout.html.twig' %}
+
+{% block stylesheets %}
+<!-- Datatable -->  
+{% endblock %}
+
+{% block floating_buttons_content %}
+<li>
+    <a href="{{ path('user_new') }}" class="btn-floating green tooltipped" data-tooltip="Nouveau collaborateur" data-delay="50" data-position="left"><i class="large mdi-content-add"></i></a>
+</li>
+{% endblock %}
+
+{% block main_content %}
+<div class="row">
+    <div class="col s12">
+        <div class="card"> 
+            <div class="content">
+                {{ include('AppBundle:User:_list.html.twig', { 'users': users }) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block javascript %}
+{{ include('AppBundle:Layout:_datatable_js.html.twig') }}
+
+<script type="text/javascript">    
+jQuery(document).ready(function () {
+    "use strict";
+    
+    var options = {
+        "cibFilter" : true
+    };
+    
+    CibDt.init(options);
+});
+</script>
+{% endblock %}
+
+

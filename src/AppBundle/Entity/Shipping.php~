@@ -1,0 +1,379 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+
+/**
+ * Shipping
+ *
+ * @ORM\Table(name="nsdh_shipping")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\ShippingRepository")
+ */
+class Shipping
+{
+    
+    public function __construct()
+    {
+        $this->pvHt = 0;
+        $this->pvTtc = 0;
+        $this->free = false;
+        $this->shippingAddress = false;
+    }
+
+    public function routingArray()
+    {
+        return array(
+            'shippingId' => $this->id,
+        );
+    }
+
+    public function __toString()
+    {
+        return "shipping #" . $this->id;
+    }
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\Quotation", mappedBy="shipping")
+     */
+    private $quotation;
+    
+    /**
+     * @var int
+     *
+     * @ORM\ManyToOne(targetEntity="ShippingType",cascade={"persist"})
+     * @ORM\JoinColumn(name="shipping_type_id", nullable=true, onDelete="SET NULL")
+     */
+    private $type;
+    
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="shippingAddress", type="boolean", nullable=true)
+     */
+    private $shippingAddress;
+    
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="fullname", type="string", length=255)
+     */
+    public $fullname;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Address", cascade={"persist","remove"})
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     * @Assert\Valid()
+     */
+    private $address;
+    
+    
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="desiredDate", type="datetime", nullable=true)
+     */
+    private $desiredDate;
+    
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="date", type="datetime", nullable=true)
+     */
+    private $date;
+
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="reference", type="string", length=255, nullable=true)
+     */
+    private $reference;
+    
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="free", type="boolean", nullable=true)
+     */
+    private $free;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pv_ht", type="float", nullable=true)
+     */
+    private $pvHt;
+
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pv_ttc", type="float", nullable=true)
+     */
+    private $pvTtc;
+    
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set quotation
+     *
+     * @param \AppBundle\Entity\Quotation $quotation
+     *
+     * @return Shipping
+     */
+    public function setQuotation(\AppBundle\Entity\Quotation $quotation = null)
+    {
+        $this->quotation = $quotation;
+
+        return $this;
+    }
+
+    /**
+     * Get quotation
+     *
+     * @return \AppBundle\Entity\Quotation
+     */
+    public function getQuotation()
+    {
+        return $this->quotation;
+    }
+
+    /**
+     * Set type
+     *
+     * @param \AppBundle\Entity\ShippingType $type
+     *
+     * @return Shipping
+     */
+    public function setType(\AppBundle\Entity\ShippingType $type = null)
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \AppBundle\Entity\ShippingType
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * Set address
+     *
+     * @param \AppBundle\Entity\Address $address
+     *
+     * @return Shipping
+     */
+    public function setAddress(\AppBundle\Entity\Address $address = null)
+    {
+        $this->address = $address;
+
+        return $this;
+    }
+
+    /**
+     * Get address
+     *
+     * @return \AppBundle\Entity\Address
+     */
+    public function getAddress()
+    {
+        return $this->address;
+    }
+
+    /**
+     * Set desiredDate
+     *
+     * @param \DateTime $desiredDate
+     *
+     * @return Shipping
+     */
+    public function setDesiredDate($desiredDate)
+    {
+        $this->desiredDate = $desiredDate;
+
+        return $this;
+    }
+
+    /**
+     * Get desiredDate
+     *
+     * @return \DateTime
+     */
+    public function getDesiredDate()
+    {
+        return $this->desiredDate;
+    }
+    
+    /**
+     * Set date
+     *
+     * @param \DateTime $date
+     *
+     * @return Shipping
+     */
+    public function setDate($date)
+    {
+        $this->date = $date;
+
+        return $this;
+    }
+
+    /**
+     * Get date
+     *
+     * @return \DateTime
+     */
+    public function getDate()
+    {
+        return $this->date;
+    }
+
+    /**
+     * Set reference
+     *
+     * @param string $reference
+     *
+     * @return Shipping
+     */
+    public function setReference($reference)
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    /**
+     * Get reference
+     *
+     * @return string
+     */
+    public function getReference()
+    {
+        return $this->reference;
+    }
+
+   
+
+    /**
+     * Set free
+     *
+     * @param boolean $free
+     *
+     * @return Shipping
+     */
+    public function setFree($free)
+    {
+        $this->free = $free;
+
+        return $this;
+    }
+
+    /**
+     * Get free
+     *
+     * @return boolean
+     */
+    public function getFree()
+    {
+        return $this->free;
+    }
+
+    /**
+     * Set pvHt
+     *
+     * @param float $pvHt
+     *
+     * @return Shipping
+     */
+    public function setPvHt($pvHt)
+    {
+        $this->pvHt = $pvHt;
+
+        return $this;
+    }
+
+    /**
+     * Get pvHt
+     *
+     * @return float
+     */
+    public function getPvHt()
+    {
+        return $this->pvHt;
+    }
+
+    /**
+     * Set pvTtc
+     *
+     * @param float $pvTtc
+     *
+     * @return Shipping
+     */
+    public function setPvTtc($pvTtc)
+    {
+        $this->pvTtc = $pvTtc;
+
+        return $this;
+    }
+
+    /**
+     * Get pvTtc
+     *
+     * @return float
+     */
+    public function getPvTtc()
+    {
+        return $this->pvTtc;
+    }
+
+    /**
+     * Set shippingAddress
+     *
+     * @param boolean $shippingAddress
+     *
+     * @return Shipping
+     */
+    public function setShippingAddress($shippingAddress)
+    {
+        $this->shippingAddress = $shippingAddress;
+
+        return $this;
+    }
+
+    /**
+     * Get shippingAddress
+     *
+     * @return boolean
+     */
+    public function getShippingAddress()
+    {
+        return $this->shippingAddress;
+    }
+}

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="_nK">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="{{ asset('assets/_con/images/icon.png') }}">
+
+    <title> Resonnance - NSDH </title>
+
+    <link href="{{ asset('font/roboto.css') }}" rel="stylesheet" type="text/css">
+    
+    <!-- Magic animation -->
+    <link href="{{ asset('bower_components/magic/magic.css') }}" type="text/css" rel="stylesheet" media="screen,projection">
+    
+    <!-- nanoScroller -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/nanoscroller/bin/css/nanoscroller.css') }}" />
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/fontawesome/css/font-awesome.min.css') }}" />
+
+    <!-- Material Design Icons -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/material-design-icons/css/material-design-icons.min.css') }}" />
+
+    <!-- IonIcons -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/ionicons/css/ionicons.min.css') }}" />
+
+    <!-- WeatherIcons -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/weather-icons/css/weather-icons.min.css') }}" />
+
+    <!-- Confirm -->
+    <link rel="stylesheet" href="{{ asset('bower_components/jquery-confirm/jquery-confirm.css') }}" type="text/css" media="all" />
+    
+    {% block stylesheets %}
+    {% endblock %}
+    
+    <!-- Main -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/_con/css/con-base.css') }}" />
+    
+    {% set theme_color = configOption('THEME_COLOR') %}
+    {% if theme_color is not null%}
+    <!-- Thème -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/_con/css/con-' ~ theme_color ~'.min.css') }}" />
+    {% endif %}
+    
+    
+    <!-- Custom -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('css/custom.css') }}" />
+    
+    <!--[if lt IE 9]>
+        <script src="{{ asset('bower_components/html5shiv/dist/html5shiv.min.js') }}" /></script>
+    <![endif]-->
+    
+</head>
+
+<!--
+  Body
+    Options:
+      .boxed - boxed layout for content
+-->
+
+<body class="yay-hide">
+
+    <!--
+  Top Navbar
+    Options:
+      .navbar-dark - dark color scheme
+      .navbar-static - static navbar
+      .navbar-under - under sidebar
+-->
+    {% block navbar %}
+    {% include "navbar.html.twig" %}
+    {% endblock %}
+    <!-- /Top Navbar -->
+
+    <!--
+  Yay Sidebar
+  Options [you can use all of theme classnames]:
+    .yay-hide-to-small         - no hide menu, just set it small with big icons
+    .yay-static                - stop using fixed sidebar (will scroll with content)
+    .yay-gestures              - to show and hide menu using gesture swipes
+    .yay-light                 - light color scheme
+    .yay-hide-on-content-click - hide menu on content click
+
+  Effects [you can use one of these classnames]:
+    .yay-overlay  - overlay content
+    .yay-push     - push content to right
+    .yay-shrink   - shrink content width
+-->
+    {% set sidebar_color = configOption('SIDEBAR_COLOR') %}
+    <aside class="yaybar yay-shrink yay-hide-to-small yay-gestures {% if sidebar_color|default('') == 'light' %}yay-light{% endif %}">
+        <div class="top">
+            <div>
+                <!-- Sidebar toggle -->
+                <a href="#" class="yay-toggle">
+                    <div class="burg1"></div>
+                    <div class="burg2"></div>
+                    <div class="burg3"></div>
+                </a>
+                <!-- Sidebar toggle -->
+
+                <!-- Logo -->
+                <a href="#!" class="brand-logo">
+                    <img src="{{ asset('/images/logo-fond-fonce.png') }}" alt="Con">
+                </a>
+                <!-- /Logo -->
+            </div>
+        </div>
+
+        <div class="nano">
+            <div class="nano-content">
+                <ul>
+                    {{ render(controller('AppBundle:App:sidebar', {'route' : app.request.attributes.get('_route')})) }}
+                    {% block sidebar %}
+                    {% endblock %}
+                </ul>
+            </div>
+        </div>
+    </aside>
+    <!-- /Yay Sidebar -->
+
+    <!-- Main Content -->
+    <section class="content-wrap">
+        {#<!-- Breadcrumb -->
+        {{ wo_render_breadcrumbs() }}
+        <!-- /Breadcrumb -->#}
+        
+        {% set _block_fixed_navbar = block('fixed_navbar') %}
+        {% if _block_fixed_navbar is not empty %}
+        <nav class="fixed-nav ">
+            <ul class="left">
+            {{ _block_fixed_navbar|raw }}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {{ include('_loader.html.twig', {'id' : 'appLoader', 'display' : true}) }}
+        <!-- La marge à droite est utilisée pour les actions button -->
+        <div id="main_content" style="display:none; margin-right: 90px">
+        {% block content %}
+        {% endblock %}
+        </div>
+        
+        {% block floating_buttons %}
+        <div class="fixed-action-btn click-to-toggle" > 
+            <a  class="btn-floating btn-large yellow darken-2 tooltipped" data-position="left" data-delay="50" data-tooltip="Masquer / Afficher le menu"> <i class="large mdi-navigation-menu"></i> </a> 
+            <ul>
+            <li><a href="{{ path('return') }}"class="btn-floating btn-large waves-effect waves-light btn grey" data-position="left" data-delay="50" data-tooltip="Retour"><i class="mdi-content-undo"></i></a></li>
+            {% block floating_buttons_content %}
+                {% include "_floating_menu.html.twig" %}
+            {% endblock %} 
+            </ul> 
+        </div>
+        {% endblock %}
+          
+    </section>
+    <!-- /Main Content -->
+
+    <!-- Help Bar -->
+    <div class="search-bar">
+        <div class="layer-overlay"></div>
+        <div class="layer-content">
+            <form action="#!">
+                <!-- Header -->
+                <a class="search-bar-toggle grey-text text-darken-2" href="#!"><i class="mdi-navigation-close"></i></a>
+                <div class="row">
+                {% block help %}
+                <h1 class="fw-700">Désolé ;(</h1>
+                <h2>Aucune aide disponible pour cette page...</h2>
+                {% endblock %}
+                </div>
+                
+                {% include "_general_help.html.twig" %}
+
+            </form>
+        </div>
+    </div>
+    <!-- /Help Bar -->
+
+    <footer>&copy; {{ date("now") | date("Y") }}
+        <strong>NSDH</strong>. Tous droits réservés. <a href="http://www.des-heros.com">www.des-heros.com</a></footer>
+
+    <!-- jQuery -->
+    <script type="text/javascript" src="{{ asset('bower_components/jquery/dist/jquery.min.js') }}" /></script>
+    
+    <!-- jQuery Ui -->
+    <script type="text/javascript" src="{{ asset('bower_components/jquery-ui/jquery-ui.js') }}" /></script>
+
+    <!-- jQuery RAF (improved animation performance) -->
+    <script type="text/javascript" src="{{ asset('bower_components/jquery-requestAnimationFrame/dist/jquery.requestAnimationFrame.min.js') }}" /></script>
+
+    <!-- nanoScroller -->
+    <script type="text/javascript" src="{{ asset('bower_components/nanoscroller/bin/javascripts/jquery.nanoscroller.min.js') }}" /></script>
+
+    <!-- Materialize -->
+    <script type="text/javascript" src="{{ asset('bower_components/materialize/bin/materialize.js') }}" /></script>
+
+    <!-- Sortable -->
+    <script type="text/javascript" src="{{ asset('bower_components/Sortable/Sortable.min.js') }}" /></script>
+
+    <!-- Google Prettify -->
+    <script type="text/javascript" src="{{ asset('bower_components/code-prettify/src/prettify.js') }}" /></script>
+    
+    <!-- Confirm -->
+    <script src="{{ asset('bower_components/jquery-confirm/jquery-confirm.js') }}" type="text/javascript"></script>
+     <script src="{{ asset('js/cib-scripts/cib-confirm.js') }}" type="text/javascript"></script>
+
+    {% block javascript %}
+    {% endblock %}
+    
+    <!-- Main  CON-->
+    <script type="text/javascript" src="{{ asset('assets/_con/js/_con.js') }}" /></script>
+
+    <!-- FOSJsRoutingBundle -->
+    <script src="{{ asset('bundles/fosjsrouting/js/router.js') }}"></script>
+    <script src="{{ path('fos_js_routing_js', { callback: 'fos.Router.setData' }) }}"></script>
+
+    <!-- Scripts CIB -->
+    <script type="text/javascript" src="{{ asset('js/cib-scripts/cib-toast.js') }}" /></script>
+    <script type="text/javascript" src="{{ asset('js/cib-scripts/cib-utils.js') }}" /></script>
+
+    <script type="text/javascript">    
+    jQuery(document).ready(function () {
+        "use strict";
+        
+        //Initialisation des scripts javascrit custom
+        CibUtils.init();
+        
+        //Notifications (Toast)
+        {% for type, flashMessages in app.session.flashbag.all() %}
+            {% for flashMessage in flashMessages %}
+                {% if type == "scrollTo" %}
+                    var offTop = $('#{{ flashMessage }}').offset().top - 160;
+                    $(document).scrollTop(offTop);
+                {% else %}
+                    CibToast.showToast('{{ type }}', '{{ flashMessage|raw|e('js') }}');
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+        
+    });
+    
+    $(function() {
+        CibUtils.showLoader('#appLoader','#main_content',true);
+    });
+    
+    </script>
+</body>
+
+</html>

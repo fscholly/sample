@@ -1,0 +1,67 @@
+{% extends 'AppBundle:Layout:layout.html.twig' %}
+
+{% block stylesheets %}
+    {#{{ include('AppBundle:Layout:_form_css.html.twig') }}#}
+{% endblock %}
+
+
+{% block main_content %}
+<!-- Product Helper -->
+<div class="row mt-10">
+    <div class="col s12">
+        <div class="card">
+            <div class="title">
+                <h5><i class="fa fa-bolt mr-10"></i>Rechercher/Calculer le prix d'un produit</h5>
+                <a class="minimize" href="#"><i class="mdi-navigation-expand-less"></i></a> 
+            </div> 
+            <div class="content">
+                {#{{ include('AppBundle:Product:_form_search.html.twig', { 'form': form }) }}#}
+            </div> 
+        </div>
+    </div>
+</div>
+<!-- Stats Panels -->
+<div class="row mt-10">
+    <div class="col l3 m6 s12">
+        <a href="#" class="card-panel stats-card green lighten-2 green-text text-lighten-5">
+            <i class="fa fa-users"></i>
+            <span class="count">1998</span>
+            <div class="name">Contacts</div>
+        </a>
+    </div>
+    <div class="col l3 m6 s12">
+        <a href="#" class="card-panel stats-card red lighten-2 red-text text-lighten-5">
+            <i class="mdi-content-content-cut"></i>
+            <span class="count">07</span>
+            <div class="name">Modèles</div>
+        </a>
+    </div>
+    <div class="col l3 m6 s12">
+        <a href="#" class="card-panel stats-card blue lighten-2 blue-text text-lighten-5">
+            <i class="fa fa-diamond"></i>
+            <span class="count">{12</span>
+            <div class="name">Produits</div>
+        </a>
+    </div>
+    <div class="col l3 m6 s12">
+        <a href="#" class="card-panel stats-card amber lighten-2 amber-text text-lighten-5">
+            <i class="fa fa-leanpub"></i>
+            <span class="count">30</span>
+            <div class="name">Services</div>
+        </a>
+    </div>
+</div>
+<!-- /Stats Panels -->    
+{% endblock %}
+
+
+{% block javascript %}
+{#{{ include('AppBundle:Layout:_form_js.html.twig') }}#}
+
+<script type="text/javascript">
+$(document).ready(function() {
+    
+});
+
+</script>
+{%endblock%}

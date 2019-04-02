@@ -1,0 +1,338 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+
+/**
+ * PaymentLine
+ *
+ * @ORM\Table(name="nsdh_payment_line")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\PaymentLineRepository")
+ * @ORM\HasLifecycleCallbacks
+ */
+class PaymentLine
+{
+    const PAYMENT_METHOD_PAYPAL = 1;
+    const PAYMENT_METHOD_CB = 2;
+    const PAYMENT_METHOD_TRANSFER = 3;
+    const PAYMENT_METHOD_BY_CHECK = 4;
+    const PAYMENT_METHOD_CASH = 5;
+    
+    public function __construct()
+    {
+        $this->amount = 0;
+    }
+
+    public function routingArray()
+    {
+        return array(
+            'paymentLineId' => $this->id,
+        );
+    }
+
+    public function __toString()
+    {
+        return "paymentLine #" . $this->id;
+    }
+    
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * Hook timestampable behavior
+     * updates createdAt, updatedAt fields
+     */
+    use TimestampableEntity;
+    
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Payment",cascade={"persist"}, inversedBy="paymentLines")
+     * @ORM\JoinColumn(name="payment_id", nullable=false, onDelete="CASCADE")
+     * @Assert\NotBlank()
+     */
+    private $payment;
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="method", type="integer")
+     * @Assert\NotBlank()
+     */
+    private $method;
+    
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="date", type="datetime", nullable=true)
+     */
+    private $date;
+    
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="plannedDate", type="datetime", nullable=true)
+     */
+    private $plannedDate;
+
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="reference", type="string", length=255, nullable=true)
+     */
+    private $reference;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="totalPvHt", type="float", nullable=true)
+     * @Assert\NotBlank()
+     */
+    private $amount;
+
+     
+    /**
+     * Renvoie les méthodes de paiement
+     * La classe et l'icon permettre un affichage customisé dans les vues
+     */
+    public function getMethods() {
+    
+        $labels = $this->getMethodLabels();
+        
+        $methods = array(
+            self::PAYMENT_METHOD_PAYPAL => array(
+                'label' =>  $labels[self::PAYMENT_METHOD_PAYPAL],
+                'class' => 'blue white-text',
+                'icon' => 'fa fa-cc-paypal'
+            ),
+            self::PAYMENT_METHOD_CB => array(
+                'label' => $labels[self::PAYMENT_METHOD_CB],
+                'class' => 'green white-text',
+                'icon' => 'fa fa-cc-visa'
+            ),
+            self::PAYMENT_METHOD_TRANSFER => array(
+                'label' => $labels[self::PAYMENT_METHOD_TRANSFER],
+                'class' => 'purple white-text',
+                'icon' => 'fa fa-credit-card'
+            ),
+            self::PAYMENT_METHOD_BY_CHECK => array(
+                'label' => $labels[self::PAYMENT_METHOD_BY_CHECK],
+                'class' => 'green white-text',
+                'icon' => 'fa fa-check'
+            ),
+            self::PAYMENT_METHOD_CASH => array(
+                'label' => $labels[self::PAYMENT_METHOD_CASH],
+                'class' => 'green white-text',
+                'icon' => 'fa fa-check'
+            ),
+        );
+        
+        return $methods;
+    }
+
+    /**
+     * Renvoie la liste des états pour l'affichage dans les formulaires
+     */
+    static public function getMethodLabels(){
+        
+        $labels = array(
+            self::PAYMENT_METHOD_PAYPAL => 'Paypal',
+            self::PAYMENT_METHOD_CB => 'Carte bleue',
+            self::PAYMENT_METHOD_TRANSFER => 'Virement',
+            self::PAYMENT_METHOD_BY_CHECK => 'Par chèque',
+            self::PAYMENT_METHOD_CASH => 'Espèce',
+        );
+        
+        return $labels;
+    }
+
+    /**
+     * Renvoie le label de l'état (les informations sont stockées dans la méthode "getMethods()")
+     */
+    public function getMethodLabel()
+    {
+        return $this->getMethods()[$this->method]['label'];
+    }
+    
+    /**
+     * Renvoie la classe de l'état (les informations sont stockées dans la méthode "getMethods()")
+     */
+    public function getMethodClass()
+    {
+        return $this->getMethods()[$this->method]['class'];
+    }
+    
+    /**
+     * Renvoie l'icon de l'état (les informations sont stockées dans la méthode "getMethods()")
+     */
+    public function getMethodIcon()
+    {
+        return $this->getMethods()[$this->method]['icon'];
+    }
+
+
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set method
+     *
+     * @param integer $method
+     *
+     * @return PaymentLine
+     */
+    public function setMethod($method)
+    {
+        $this->method = $method;
+
+        return $this;
+    }
+
+    /**
+     * Get method
+     *
+     * @return integer
+     */
+    public function getMethod()
+    {
+        return $this->method;
+    }
+
+    /**
+     * Set date
+     *
+     * @param \DateTime $date
+     *
+     * @return PaymentLine
+     */
+    public function setDate($date)
+    {
+        $this->date = $date;
+
+        return $this;
+    }
+
+    /**
+     * Get date
+     *
+     * @return \DateTime
+     */
+    public function getDate()
+    {
+        return $this->date;
+    }
+
+    /**
+     * Set plannedDate
+     *
+     * @param \DateTime $plannedDate
+     *
+     * @return PaymentLine
+     */
+    public function setPlannedDate($plannedDate)
+    {
+        $this->plannedDate = $plannedDate;
+
+        return $this;
+    }
+
+    /**
+     * Get plannedDate
+     *
+     * @return \DateTime
+     */
+    public function getPlannedDate()
+    {
+        return $this->plannedDate;
+    }
+
+    /**
+     * Set reference
+     *
+     * @param string $reference
+     *
+     * @return PaymentLine
+     */
+    public function setReference($reference)
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    /**
+     * Get reference
+     *
+     * @return string
+     */
+    public function getReference()
+    {
+        return $this->reference;
+    }
+
+    /**
+     * Set amount
+     *
+     * @param float $amount
+     *
+     * @return PaymentLine
+     */
+    public function setAmount($amount)
+    {
+        $this->amount = $amount;
+
+        return $this;
+    }
+
+    /**
+     * Get amount
+     *
+     * @return float
+     */
+    public function getAmount()
+    {
+        return $this->amount;
+    }
+
+    /**
+     * Set payment
+     *
+     * @param \AppBundle\Entity\Payment $payment
+     *
+     * @return PaymentLine
+     */
+    public function setPayment(\AppBundle\Entity\Payment $payment)
+    {
+        $this->payment = $payment;
+
+        return $this;
+    }
+
+    /**
+     * Get payment
+     *
+     * @return \AppBundle\Entity\Payment
+     */
+    public function getPayment()
+    {
+        return $this->payment;
+    }
+}

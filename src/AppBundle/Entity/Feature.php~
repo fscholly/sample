@@ -1,0 +1,303 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+
+/**
+ * Feature
+ *
+ * @ORM\Table(name="nsdh_feature")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\FeatureRepository")
+ * @UniqueEntity({"code"})
+ */
+class Feature
+{
+    public function __construct() {
+        $this->paHt = 0;
+        $this->paTtc = 0;
+        $this->pvHt = 0;
+        $this->pvTtc = 0;
+    }
+    
+    public function routingArray()
+    {
+        return array(
+            'featureId' => $this->id,
+        );
+    }
+    
+    public function __toString() {
+        return $this->getFeatureType() . ' : ' . $this->name;
+    }
+    
+    
+    /**
+     * Hook timestampable behavior
+     * updates createdAt, updatedAt fields
+     */
+    use TimestampableEntity;
+    
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    public $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    public $name;
+
+     /**
+     * @var string
+     *
+     * @ORM\Column(name="code", type="string", length=255, unique=true)
+     * @Assert\NotBlank()
+     */
+    private $code;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="FeatureType", inversedBy="features", cascade={"persist"})
+     * @ORM\JoinColumn(name="feature_type_id", nullable=true, onDelete="CASCADE")
+     * @Assert\NotBlank()
+     */
+    public $featureType;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pa_ht", type="float", nullable=true)
+     */
+    private $paHt;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pa_ttc", type="float", nullable=true)
+     */
+    private $paTtc;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pv_ht", type="float", nullable=true)
+     */
+    private $pvHt;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pv_ttc", type="float", nullable=true)
+     */
+    private $pvTtc;
+    
+    public function setAutomaticValue()
+    {
+        $this->paHt = ($this->paTtc) ? floatval($this->paTtc / (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+        $this->pvHt = ($this->pvTtc) ? floatval($this->pvTtc / (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+        // Mise à jour du montant de la tva collectée / facturée
+//        $this->paTtc = ($this->paHt) ? floatval($this->paHt * (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+//        $this->pvTtc = ($this->pvHt) ? floatval($this->pvHt * (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+    }
+    
+    /**
+     * Renvoie le nom complet
+     *
+     */
+    public function getFullName() {
+        return '#'. $this->id . ' - ' .$this->name;
+    }
+    
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set name
+     *
+     * @param string $name
+     *
+     * @return Feature
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Get name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    
+    /**
+     * Set code
+     *
+     * @param string $code
+     *
+     * @return Feature
+     */
+    public function setCode($code)
+    {
+        $this->code = $code;
+
+        return $this;
+    }
+
+    /**
+     * Get code
+     *
+     * @return string
+     */
+    public function getCode()
+    {
+        return $this->code;
+    }
+    
+    /**
+     * Set FeatureType
+     *
+     * @param \AppBundle\Entity\FeatureType $featureType
+     *
+     * @return Feature
+     */
+    public function setFeatureType($featureType)
+    {
+        $this->featureType = $featureType;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \AppBundle\Entity\FeatureType
+     */
+    public function getFeatureType()
+    {
+        return $this->featureType;
+    }
+    
+    /**
+     * Set paHt
+     *
+     * @param float $paHt
+     *
+     * @return Feature
+     */
+    public function setPaHt($paHt)
+    {
+        $this->paHt = $paHt;
+
+        return $this;
+    }
+
+    /**
+     * Get paHt
+     *
+     * @return float
+     */
+    public function getPaHt()
+    {
+        return $this->paHt;
+    }
+    
+      /**
+     * Set pvHt
+     *
+     * @param float $pvHt
+     *
+     * @return Feature
+     */
+    public function setPvHt($pvHt)
+    {
+        $this->pvHt = $pvHt;
+
+        return $this;
+    }
+
+    /**
+     * Get pvHt
+     *
+     * @return float
+     */
+    public function getPvHt()
+    {
+        return $this->pvHt;
+    }
+    
+      /**
+     * Set paTtc
+     *
+     * @param float $paTtc
+     *
+     * @return Feature
+     */
+    public function setPaTtc($paTtc)
+    {
+        $this->paTtc = $paTtc;
+
+        return $this;
+    }
+
+    /**
+     * Get paTtc
+     *
+     * @return float
+     */
+    public function getPaTtc()
+    {
+        return $this->paTtc;
+    }
+ 
+     /**
+     * Set pvTtc
+     *
+     * @param float $pvTtc
+     *
+     * @return Feature
+     */
+    public function setPvTtc($pvTtc)
+    {
+        $this->pvTtc = $pvTtc;
+
+        return $this;
+    }
+
+    /**
+     * Get pvTtc
+     *
+     * @return float
+     */
+    public function getPvTtc()
+    {
+        return $this->pvTtc;
+    }
+   
+}
+

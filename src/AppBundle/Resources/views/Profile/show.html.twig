@@ -1,0 +1,72 @@
+{% extends 'AppBundle:Layout:layout.html.twig' %}
+
+{% block stylesheets %}
+{% endblock %}
+
+{% block floating_buttons_content %}
+<li><a href="{{ path('fos_user_profile_edit') }}" class="btn-floating btn-large indigo tooltipped" data-tooltip="Editer mon profil" data-delay="50" data-position="left"><i class="large fa fa-pencil"></i></a></li>
+<li><a href="{{ path('fos_user_change_password') }}" class="btn-floating btn-large orange tooltipped" data-tooltip="Modifier mon mot de passe" data-delay="50" data-position="left"><i class="large fa fa-lock"></i></a></li>
+{% endblock %}
+
+{% block fixed_navbar %}
+    {{ include ('AppBundle:AppUser:_fixed_navbar.html.twig', {'route': app.request.attributes.get('_route') }) }}
+{% endblock %}
+
+{% block content %}
+
+{% block fos_user_content %}
+<div class="row">
+    <div class="col l6 m12 s12">
+        <div class="card">
+            <div class="title blue-text">
+                <h4 class="blue-text"><i class="fa fa-info-circle mr-10"></i>Informations personelles</h4>
+            </div>
+            <div class="content">
+                <div class="col s4 center">
+                    <img src="{{ user.photo.imageLarge.webPath | default(null) }}" alt="{{ user.fullname }}" class="fluid-width">
+                </div>
+                <div class="col s8 m-0 p-0">
+                    <table class="table table-striped"> 
+                        <tbody> 
+                            <tr> 
+                                <th>Prénom</th> 
+                                <td>{{ user.firstname }}</td>
+                            </tr>
+                            <tr> 
+                                <th>Nom</th> 
+                                <td>{{ user.lastname }}</td> 
+                            </tr>
+                            <tr> 
+                                <th>Email</th> 
+                                <td>{{ user.email }}</td> 
+                            </tr> 
+                            <tr> 
+                                <th>Description</th> 
+                                <td>{{ user.description | raw }}</td> 
+                            </tr>
+                        </tbody> 
+                    </table>
+                </div> 
+            </div>
+        </div>
+    </div>
+</div>
+
+     
+{% endblock fos_user_content %}      
+
+{% endblock content %}
+
+
+{% block javascript %}
+{{ include ('AppBundle:Layout:_form_js.html.twig') }}
+
+<script type="text/javascript">    
+jQuery(document).ready(function () { 
+    
+    
+});
+
+</script>
+
+{% endblock %}

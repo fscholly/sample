@@ -1,0 +1,7 @@
+{% if price is defined %}
+    {% if forTable is defined and forTable %}
+        {{ price|round(2)|number_format(2, '.', '') }}
+    {% else %}
+        {{ price|round(2)|number_format(2, '.', ' ') }} €
+    {% endif %}
+{% endif %}

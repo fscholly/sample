@@ -1,0 +1,299 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+
+
+/**
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\PhotoRepository")
+ * @ORM\Table(name="nsdh_photo")
+ * @ORM\HasLifecycleCallbacks
+ */
+class Photo
+{
+    public function __construct(\AppBundle\Entity\ImageType $imageSmallType = null, \AppBundle\Entity\ImageType $imageMediumType = null, \AppBundle\Entity\ImageType $imageLargeType = null)
+    {
+        $this->imageSmall = new \AppBundle\Entity\Image($imageSmallType);
+        $this->imageMedium = new \AppBundle\Entity\Image($imageMediumType);
+        $this->imageLarge = new \AppBundle\Entity\Image($imageLargeType);
+    }
+
+    public function routingArray()
+    {
+        return array(
+            'photoId' => $this->id,
+            );
+    }
+
+    public function __toString()
+    {
+        return 'photo #'.$this->id;
+    }
+
+    /**
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    protected $id;
+
+    /*
+     * Hook timestampable behavior
+     * updates createdAt, updatedAt fields
+     */
+    use TimestampableEntity;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Image", cascade={"persist","remove"})
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     */
+    private $imageLarge;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Image", cascade={"persist","remove"})
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     */
+    private $imageMedium;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Image", cascade={"persist","remove"})
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     */
+    private $imageSmall;
+    
+    /**
+     * @Assert\Image(maxSize="10485760")
+     */
+    protected $file;
+
+    private $imageData;
+    
+    
+    /**
+     * Créer et télécharger les images sur le serveur, supprimer les anciennes images
+     *
+     * @ORM\PreFlush()
+     */
+    public function executeUpload(\Doctrine\ORM\Event\PreFlushEventArgs $args)
+    {
+        // chargement avec "Cropit"
+        if (null != $this->imageData) {
+            // Fabriquer l'image à partir de son code en base64
+            $exp = explode(',', $this->imageData);
+            $base64 = array_pop($exp);
+            $data = base64_decode($base64);
+            
+            // Créer l'image dans une zone de stockage temporaire
+            $filename =  'image-' . uniqid(rand(1,10)) . '.png';
+            $uploadTmpDir = $this->checkTmpRootDir();
+            $filepath = $uploadTmpDir . '/' . $filename;
+            file_put_contents($filepath, $data);
+        }
+        // chargement un input classique
+        elseif (null != $this->file) {
+            // Déplacer le fichier uploadé dans un répertoire temporaire
+            $unique_id = uniqid($this->id);
+            $ext = pathinfo($this->file->getClientOriginalName(), PATHINFO_EXTENSION);
+            $filename = "image-".$unique_id.".".$ext;
+            $uploadTmpDir = $this->checkTmpRootDir();
+            $this->file->move($uploadTmpDir, $filename);
+            $filepath = $uploadTmpDir.'/'.$filename;
+        }
+        else{
+            return;
+        }
+        
+        $this->createFrom($filepath, $filename); 
+        
+        // supprimer les fichiers temporaires
+        unset($this->file);
+        unset($this->imageData);
+        $this->setFile(null);
+        unlink($filepath);
+    }
+
+    /**
+     * Créer un fichier à partir d'une fichier source
+     * 
+     * @param string $source     Chemin absolu vers le fichier source à copier
+     * @param string $filepath   Nom du fichier destination
+     */
+    public function createFrom($source, $filepath) 
+    {
+        // Créer l'image SMALL
+        $imageSmall = $this->getImageSmall();
+        if ($imageSmall) {
+            $imageSmall->createFrom($source, "small-".$filepath);
+        }
+        
+        // Créer l'image MEDIUM
+        $imageMedium = $this->getImageMedium();
+        if ($imageMedium) {
+            $imageMedium->createFrom($source, "medium-".$filepath);
+        }
+        
+        // Créer l'image LARGE
+        $imageLarge = $this->getImageLarge();
+        if ($imageLarge) {
+            $imageLarge->createFrom($source, "large-".$filepath);
+        }
+    }
+    
+    /*
+     *  Créer le dossier temporaire s'il n'existe pas
+     */
+    public function checkTmpRootDir()
+    {
+        $uploadTmpDir = $this->getUploadTmpDir();
+        if (!file_exists($uploadTmpDir)) {
+            mkdir($uploadTmpDir, 0775, true);
+        }
+        
+        return $uploadTmpDir;
+    }
+    
+    /**
+     * Get upload tmp root dir.
+     *
+     * @return string
+     */
+    public function getUploadTmpDir()
+    {
+        return __DIR__.'/../../../var/tmp';
+    }
+    
+    public function getDataImageLargeSize()
+    {
+        $imageLarge = $this->getImageLarge();
+        list($width, $height) = getimagesize($imageLarge->getAbsolutePath());
+        return $width . 'x' . $height;
+    }
+
+    public function getDataImageMediumSize()
+    {
+        $imageMedium = $this->getImageMedium();
+        list($width, $height) = getimagesize($imageMedium->getAbsolutePath());
+        return $width . 'x' . $height;
+    }
+
+    /**
+     * Get id.
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+    
+
+    /**
+     * Set imageLarge
+     *
+     * @param \AppBundle\Entity\Image $imageLarge
+     *
+     * @return Photo
+     */
+    public function setImageLarge(\AppBundle\Entity\Image $imageLarge = null)
+    {
+        $this->imageLarge = $imageLarge;
+
+        return $this;
+    }
+
+    /**
+     * Get imageLarge
+     *
+     * @return \AppBundle\Entity\Image
+     */
+    public function getImageLarge()
+    {
+        return $this->imageLarge;
+    }
+
+    /**
+     * Set imageMedium
+     *
+     * @param \AppBundle\Entity\Image $imageMedium
+     *
+     * @return Photo
+     */
+    public function setImageMedium(\AppBundle\Entity\Image $imageMedium = null)
+    {
+        $this->imageMedium = $imageMedium;
+
+        return $this;
+    }
+
+    /**
+     * Get imageMedium
+     *
+     * @return \AppBundle\Entity\Image
+     */
+    public function getImageMedium()
+    {
+        return $this->imageMedium;
+    }
+
+    /**
+     * Set imageSmall
+     *
+     * @param \AppBundle\Entity\Image $imageSmall
+     *
+     * @return Photo
+     */
+    public function setImageSmall(\AppBundle\Entity\Image $imageSmall = null)
+    {
+        $this->imageSmall = $imageSmall;
+
+        return $this;
+    }
+
+    /**
+     * Get imageSmall
+     *
+     * @return \AppBundle\Entity\Image
+     */
+    public function getImageSmall()
+    {
+        return $this->imageSmall;
+    }
+    
+    /**
+     * Set file.
+     *
+     * @param string $file
+     *
+     * @return Photo
+     */
+    public function setFile($file)
+    {
+        $this->file = $file;
+
+        return $this;
+    }
+
+    /**
+     * Get file.
+     *
+     * @return string
+     */
+    public function getFile()
+    {
+        return $this->file;
+    }
+    
+    public function getImageData()
+    {
+        return $this->imageData;
+    }
+    
+    public function setImageData($imageData = null)
+    {
+        $this->imageData = $imageData;
+    }
+
+}

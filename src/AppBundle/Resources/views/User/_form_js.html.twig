@@ -1,0 +1,23 @@
+
+<script type="text/javascript">  
+jQuery(document).ready(function () {
+    "use strict";
+    var options = {
+        formSelector : '#user_form',
+        cropitWidth: {{ user.photo.imageLarge.imageType.maxWidth| default(200) }},
+        cropitHeight: {{ user.photo.imageLarge.imageType.maxHeight| default(200) }},
+        cropitExportZoom: 1,
+        cropitImageSrc : '{{ user.photo.imageLarge.webPath | default('/images/default-avatar-large.jpg') }}',
+    };
+    
+    CibForm.init(options);
+
+    //Bouton submit
+    $('#submit_button').click(function () {
+        $(options.formSelector).submit();
+    });
+
+    
+});
+
+</script>

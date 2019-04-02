@@ -1,0 +1,12 @@
+{% if wo_breadcrumbs()|length %}
+{%- spaceless -%}
+    {% set b = breadcrumbs | last %}
+    {% if b.url %}
+        <a href="{{ b.url }}" >
+            {{- b.text | raw -}}
+        </a>
+    {% else %}
+        {{- b.text | raw -}}
+    {% endif %}
+{%- endspaceless -%}
+{% endif %}

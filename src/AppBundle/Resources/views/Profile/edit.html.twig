@@ -1,0 +1,50 @@
+{% extends 'AppBundle:Layout:layout.html.twig' %}
+
+{% block stylesheets %}
+{{ include('AppBundle:Layout:_form_css.html.twig') }}
+{% endblock %}
+
+{% block floating_buttons_content %}
+<li><a href="#confirmModal" class="btn-floating btn-large green modal-trigger tooltipped" data-tooltip="Enregistrer" data-delay="50" data-position="left"><i class="large mdi-navigation-check"></i></a></li>
+{% endblock %}
+
+{% block fixed_navbar %}
+    {{ include ('AppBundle:AppUser:_fixed_navbar.html.twig', {'route': app.request.attributes.get('_route') }) }}
+{% endblock %}
+
+{% block content %}
+    {% block fos_user_content %}
+        {% include "AppBundle:Profile:edit_content.html.twig" %}
+    {% endblock fos_user_content %}
+{% endblock %}   
+    
+{% block javascript %}
+{{ include ('AppBundle:Layout:_form_js.html.twig') }}
+
+<script type="text/javascript">
+    
+$(document).ready(function() {
+    var options = {
+        formSelector : '.fos_user_profile_edit',
+        cropitWidth: {{ app.user.photo.imageLarge.imageType.maxWidth| default(200) }},
+        cropitHeight: {{ app.user.photo.imageLarge.imageType.maxHeight| default(200) }},
+        cropitExportZoom: 1,
+        cropitImageSrc : '{{ app.user.photo.imageLarge.webPath | default('/images/default-avatar-large.jpg') }}',
+    };
+    
+    CibForm.init(options);
+
+    //Soumission du formulaire
+    $('#submit_button').click(function() {
+        $('#profile_form').submit();
+    });
+
+    {% if form.current_password.vars.valid == false %}
+        $('#confirmModal').openModal();
+    {% endif%}
+
+});
+    
+</script>
+    
+{% endblock %}

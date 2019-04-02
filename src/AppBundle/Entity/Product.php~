@@ -1,0 +1,558 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Doctrine\ORM\Event\LifecycleEventArgs;
+
+
+/**
+ * Product.
+ *
+ * @ORM\Table(name="nsdh_product")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\ProductRepository")
+ * @ORM\HasLifecycleCallbacks
+ */
+class Product
+{
+    public function __construct()
+    {
+        $this->photos = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->features = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->paHt = 0;
+        $this->paTtc = 0;
+        $this->pvHt = 0;
+        $this->pvTtc = 0;
+    }
+
+    public function routingArray()
+    {
+        return array(
+            'productId' => $this->id,
+        );
+    }
+
+    public function __toString()
+    {
+        return $this->getDesign()->__toString();
+    }
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    public $id;
+
+    /*
+     * Hook timestampable behavior
+     * updates createdAt, updatedAt fields
+     */
+    use TimestampableEntity;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    private $name;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="reference", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    public $reference;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="description", type="text", nullable=true)
+     */
+    public $description;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="ProductRange", cascade={"persist"}, inversedBy="products")
+     * @ORM\JoinColumn(onDelete="SET NULL", nullable=true)
+     */
+    public $range;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pa_ht", type="float", nullable=true)
+     */
+    private $paHt;
+
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pa_ttc", type="float", nullable=true)
+     */
+    private $paTtc;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pv_ht", type="float", nullable=true)
+     */
+    private $pvHt;
+
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pv_ttc", type="float", nullable=true)
+     */
+    private $pvTtc;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="AppBundle\Entity\Photo", cascade={"persist","remove"})
+     * @ORM\JoinTable(name="nsdh_product_photo")
+     * @ORM\OrderBy({"updatedAt" = "DESC"})
+     */
+    private $photos;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Photo")
+     * @ORM\JoinColumn(onDelete="SET NULL", nullable=true)
+     */
+    private $mainPhoto;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="Design",cascade={"persist"}, inversedBy="products")
+     * @ORM\JoinColumn(name="design_id", nullable=true, onDelete="SET NULL")
+     * @Assert\NotBlank()
+     */
+    private $design;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="Feature", cascade={"persist"})
+     * @ORM\JoinTable(name="nsdh_product_feature")
+     */
+    private $features;
+    
+    public function setAutomaticValue()
+    {
+        $this->paHt = ($this->paTtc) ? floatval($this->paTtc / (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+        $this->pvHt = ($this->pvTtc) ? floatval($this->pvTtc / (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+        // Mise à jour du montant de la tva collectée / facturée
+//        $this->paTtc = ($this->paHt) ? floatval($this->paHt * (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+//        $this->pvTtc = ($this->pvHt) ? floatval($this->pvHt * (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+    }
+    
+    public function getComputedPaTtc(){
+        $design = $this->getDesign();
+        $paTtc = $design->getPaTtc();
+        foreach($this->features as $feature){
+            $paTtc += $feature->getPaTtc();
+        }
+        
+        return $paTtc;
+    }
+    
+    public function getComputedPvTtc(){
+        $pvTtc = $this->getDesign()->getPvTtc();
+        foreach($this->features as $feature){
+            $pvTtc += $feature->getPvTtc();
+            
+            $featureType = $feature->getFeatureType();
+            $service = $featureType->getService();
+            if ($service) {
+               $pvTtc += $service->getPvTtc();
+            }
+        }
+        
+        return $pvTtc;
+    }
+    
+    public function updatePrices() {
+        $this->setPaTtc($this->getComputedPaTtc());
+        $this->setPvTtc($this->getComputedPvTtc());
+        $this->setAutomaticValue();
+    }
+    
+    /**
+     * Mettre à jour l'image principale
+     *
+     * @ORM\PrePersist()
+     * @ORM\PreUpdate()
+     */
+    public function updateMainPhoto()
+    {
+        if (empty($this->getMainPhoto())) {
+            $this->checkAndSetMainPhoto();
+        }
+    }
+    
+    static public function getImageTypeCodes()
+    {
+        return array(
+            'small' => "PRODUCT_SMALL",
+            'medium' => "PRODUCT_MEDIUM",
+            'large' => "PRODUCT_LARGE",
+        );
+    }
+    
+    /**
+     * Get otherPhotos : renvoie toutes les images produit sauf l'image principale
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getOtherPhotos()
+    {
+        $photos = new \Doctrine\Common\Collections\ArrayCollection($this->getPhotos()->toArray());
+        $photos->removeElement($this->mainPhoto);
+        return $photos;
+    }
+    
+    /**
+     * Modifier l'image principale automatiquement :
+     * - avec une autre image que l'image principale actuelle s'il y a plus d'une image pour le produit
+     * - sinon conserver l'image principale
+     * 
+     * @return Product
+     */
+    public function checkAndSetMainPhoto()
+    {
+        if($this->getMainPhoto() == null) {
+            $photos = $this->getOtherPhotos();
+            $photo = $photos->count() ? $photos->last() : null;
+            $this->setMainPhoto($photo);
+        }
+        
+        return $this;
+    }
+    
+    /**
+     * Renvoie le nom complet
+     *
+     */
+    public function getFullName() {
+        return '#'. $this->id . ' - ' .$this->name;
+    }
+    
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set name
+     *
+     * @param string $name
+     *
+     * @return Product
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Get name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Set reference
+     *
+     * @param string $reference
+     *
+     * @return Product
+     */
+    public function setReference($reference)
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    /**
+     * Get reference
+     *
+     * @return string
+     */
+    public function getReference()
+    {
+        return $this->reference;
+    }
+
+    /**
+     * Set description
+     *
+     * @param string $description
+     *
+     * @return Product
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * Get description
+     *
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * Set paHt
+     *
+     * @param float $paHt
+     *
+     * @return Product
+     */
+    public function setPaHt($paHt)
+    {
+        $this->paHt = $paHt;
+
+        return $this;
+    }
+
+    /**
+     * Get paHt
+     *
+     * @return float
+     */
+    public function getPaHt()
+    {
+        return $this->paHt;
+    }
+
+    /**
+     * Set paTtc
+     *
+     * @param float $paTtc
+     *
+     * @return Product
+     */
+    public function setPaTtc($paTtc)
+    {
+        $this->paTtc = $paTtc;
+
+        return $this;
+    }
+
+    /**
+     * Get paTtc
+     *
+     * @return float
+     */
+    public function getPaTtc()
+    {
+        return $this->paTtc;
+    }
+
+    /**
+     * Set pvHt
+     *
+     * @param float $pvHt
+     *
+     * @return Product
+     */
+    public function setPvHt($pvHt)
+    {
+        $this->pvHt = $pvHt;
+
+        return $this;
+    }
+
+    /**
+     * Get pvHt
+     *
+     * @return float
+     */
+    public function getPvHt()
+    {
+        return $this->pvHt;
+    }
+
+    /* Set pvTtc
+     *
+     * @param float $pvTtc
+     *
+     * @return Product
+     */
+    public function setPvTtc($pvTtc)
+    {
+        $this->pvTtc = $pvTtc;
+
+        return $this;
+    }
+
+    /**
+     * Get pvTtc
+     *
+     * @return float
+     */
+    public function getPvTtc()
+    {
+        return $this->pvTtc;
+    }
+
+    /**
+     * Set range
+     *
+     * @param \AppBundle\Entity\ProductRange $range
+     *
+     * @return Product
+     */
+    public function setRange(\AppBundle\Entity\ProductRange $range = null)
+    {
+        $this->range = $range;
+
+        return $this;
+    }
+
+    /**
+     * Get range
+     *
+     * @return \AppBundle\Entity\ProductRange
+     */
+    public function getRange()
+    {
+        return $this->range;
+    }
+
+    /**
+     * Add photo
+     *
+     * @param \AppBundle\Entity\Photo $photo
+     *
+     * @return Product
+     */
+    public function addPhoto(\AppBundle\Entity\Photo $photo)
+    {
+        $this->photos[] = $photo;
+
+        return $this;
+    }
+
+    /**
+     * Remove photo
+     *
+     * @param \AppBundle\Entity\Photo $photo
+     */
+    public function removePhoto(\AppBundle\Entity\Photo $photo)
+    {
+        $this->photos->removeElement($photo);
+    }
+
+    /**
+     * Get photos
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getPhotos()
+    {
+        return $this->photos;
+    }
+
+    /**
+     * Set mainPhoto
+     *
+     * @param \AppBundle\Entity\Photo $mainPhoto
+     *
+     * @return Product
+     */
+    public function setMainPhoto(\AppBundle\Entity\Photo $mainPhoto = null)
+    {
+        $this->mainPhoto = $mainPhoto;
+
+        return $this;
+    }
+
+    /**
+     * Get mainPhoto
+     *
+     * @return \AppBundle\Entity\Photo
+     */
+    public function getMainPhoto()
+    {
+        return $this->mainPhoto;
+    }
+    
+    /**
+     * Set Design
+     *
+     * @param \AppBundle\Entity\Design $design
+     *
+     * @return Product
+     */
+    public function setDesign($design)
+    {
+        $this->design = $design;
+
+        return $this;
+    }
+
+    /**
+     * Get design
+     *
+     * @return \AppBundle\Entity\Design
+     */
+    public function getDesign()
+    {
+        return $this->design;
+    }
+    
+    /**
+     * Add feature
+     *
+     * @param \AppBundle\Entity\Feature $feature
+     * @return Product
+     */
+    public function addFeature(\AppBundle\Entity\Feature $feature)
+    {
+        $this->features[] = $feature;
+
+        return $this;
+    }
+
+    /**
+     * Remove feature
+     *
+     * @param \AppBundle\Entity\Feature $feature
+     */
+    public function removeFeature(\AppBundle\Entity\Feature $feature)
+    {
+        $this->features->removeElement($feature);
+    }
+
+    /**
+     * Get features
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getFeatures()
+    {
+        return $this->features;
+    }
+    
+}

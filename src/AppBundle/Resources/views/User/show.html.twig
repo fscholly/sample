@@ -1,0 +1,59 @@
+{% extends 'AppBundle:Layout:layout.html.twig' %}
+
+{% block stylesheets %}
+{{ include('AppBundle:Layout:_form_css.html.twig') }}
+{% endblock %}
+
+{% block main_content %}
+
+<div class="row">
+    <div class="col s12">
+        <div class="card"> 
+            <div class="title">
+                <h4 class="blue-text"><i class="fa fa-info-circle mr-10"></i>Informations générales</h4>
+            </div> 
+            <div class="content">
+                <div class="col s4 center">
+                    <img src="{{ user.photo.imageLarge.webPath | default(null) }}" alt="{{ user.fullname }}" class="fluid-width">
+                </div>
+                <div class="col s8 m-0 p-0">
+                    <table class="table table-striped"> 
+                        <tbody> 
+                            <tr> 
+                                <th class="w-160">Prénom</th> 
+                                <td>{{ user.firstname }}</td>
+                            </tr>
+                            <tr> 
+                                <th>Nom</th> 
+                                <td>{{ user.lastname }}</td> 
+                            </tr>
+                            <tr> 
+                                <th>Email</th> 
+                                <td>{{ user.email }}</td> 
+                            </tr> 
+                            <tr> 
+                                <th>Description</th> 
+                                <td>{{ user.description | raw }}</td> 
+                            </tr>
+                        </tbody> 
+                    </table>
+                </div> 
+            </div> 
+        </div>
+    </div>
+</div>
+            
+{% endblock %}
+
+
+{% block javascript %}
+{{ include('AppBundle:Layout:_form_js.html.twig') }}
+
+<script type="text/javascript">    
+jQuery(document).ready(function () { 
+
+    
+});
+</script>
+
+{% endblock %}

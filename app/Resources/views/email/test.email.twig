@@ -1,0 +1,34 @@
+{% extends '::layout_mail.html.twig' %}
+{% block title %}Nous sommes des héros - Test{% endblock %}
+
+{% block body %}
+
+{% set feature_content %}
+<p>
+<table>
+    <thead>
+        <tr>
+            <th>A</th>
+            <th>B</th>
+            <th>C</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>aaaa</td>
+            <td>bbbb</td>
+            <td>cccc</td>
+        </tr>
+    </tbody>
+</table>
+</p>
+{% endset %}
+{{ mail_content.rightFeature (
+    "Liste", 
+    feature_content, 
+    "Voir",
+    url('homepage'), 
+    absolute_url(asset('images/side.png')),
+    true) }}
+    
+{% endblock %}

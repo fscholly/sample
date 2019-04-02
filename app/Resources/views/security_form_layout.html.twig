@@ -1,0 +1,9 @@
+{% extends 'form_layout.html.twig' %}
+
+{%- block form_row -%}
+    <div class="input-field">
+    {{- form_widget(form) -}}
+    {{- form_label(form) -}}
+    </div>
+    {{- form_errors(form) -}}
+{%- endblock form_row -%}

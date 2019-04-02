@@ -1,0 +1,57 @@
+{% extends 'form_div_layout.html.twig' %}
+
+{%- block form_row -%}
+    <div> 
+    {{- form_label(form) -}}
+    {{- form_widget(form) -}}
+    </div>
+    {{- form_errors(form) -}}
+{%- endblock form_row -%}
+
+{%- block form_errors -%}
+    {%- if errors|length > 0 -%}
+    <div class="alert alert-border-left">
+        <ul class="fa-ul">
+            {%- for error in errors -%}
+                <li>
+                    <i class="fa-li fa fa-times-circle"></i>
+                    {{ error.message }}
+                </li>
+            {%- endfor -%}
+        </ul>
+    </div>
+    {%- endif -%}
+{%- endblock form_errors -%}
+
+{%- block checkbox_widget -%}
+    <p class="mb-10">
+        <input type="checkbox" {{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} /> 
+        <label for="{{ id }}">{{ label }}</label>
+    </p>
+{%- endblock checkbox_widget -%}
+
+{%- block form_widget_simple -%}
+<div class="input-field"> 
+{%- set type = type|default('text') -%}
+{% if type == 'file' %}
+    <input class="{{ attr["class"] | default("")}}" type="{{ type }}" {{ block('widget_attributes') }} {% if value is not empty %}value="{{ value }}" {% endif %}/>
+{% else%}
+
+{% if icon is defined %}
+<i class="fa {{ icon }} prefix"></i>
+{% endif %}
+<input type="{{ type }}" {{ block('widget_attributes') }} {% if value is not empty %}value="{{ value }}" {% endif %}/>
+
+{% endif %}
+</div>
+{%- endblock form_widget_simple -%}
+
+{%- block radio_widget -%}
+    <input type="radio" {{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} />
+{%- endblock radio_widget -%}
+
+{%- block percent_widget -%}
+    {%- set type = type|default('text') -%} 
+        {% set icon = 'fa-percent' %} 
+        {{ block('form_widget_simple') }}
+{%- endblock percent_widget -%}

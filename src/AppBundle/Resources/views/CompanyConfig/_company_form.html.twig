@@ -1,0 +1,38 @@
+{% form_theme form 'form_layout.html.twig' %}
+
+{{ form_start(form, {'attr': {'id': 'company_config_form'}}) }}
+<div class="row mt-0">
+    <div class="col l6 m12 s12">
+        <div class="card">
+            <div class="title">
+                <h4 class="blue-text"><i class="fa fa-info-circle mr-10"></i>Informations générales</h4>
+            </div>
+            <div class="content">
+            {{ form_row(form.name) }}
+            {{ form_row(form.legalForm) }}
+            {{ form_row(form.capital) }}
+            {{ form_row(form.sirenNumber) }}
+            {{ form_row(form.siretNumber) }}
+            {{ form_row(form.rcsNumber) }}
+            {{ form_row(form.apeCode) }}
+            {{ form_row(form.tvaNumber) }}
+            </div>
+        </div>
+    </div>
+    <div class="col l6 m12 s12">
+        <div class="card">
+            <div class="title">
+                <h4 class="blue-text"><i class="fa fa-map-marker mr-10"></i>Adresse</h4>
+            </div>
+            <div class="content">
+            {{ form_row(form.address.line1) }}
+            {{ form_row(form.address.line2) }}
+            {{ form_row(form.address.cp) }}
+            {{ form_row(form.address.city) }}
+            {{ form_row(form.address.country) }}
+            </div>
+        </div>
+    </div>
+</div>
+{{ form_rest(form) }}
+{{ form_end(form) }}

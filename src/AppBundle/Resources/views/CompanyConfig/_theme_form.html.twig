@@ -1,0 +1,16 @@
+{% form_theme form 'form_layout.html.twig' %}
+
+{{ form_start(form, {'attr': {'id': 'company_config_form'}}) }}    
+<div class="row mt-0">
+     <div class="col s12">
+        <div class="card">
+            <div class="title blue-text">
+                <h4><i class="fa fa-picture-o mr-10"></i>Thème</h4>
+            </div>
+            <div class="content">
+                {%include 'AppBundle:CompanyConfig:_form.html.twig' with { 'form': form } %}
+            </div>
+        </div>
+    </div>
+</div> 
+{{ form_end(form) }}  

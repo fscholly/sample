@@ -1,0 +1,195 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
+/**
+ * Universe
+ *
+ * @ORM\Table(name="nsdh_universe")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\UniverseRepository")
+ * @UniqueEntity({"name"})
+ * @ORM\HasLifecycleCallbacks
+ */
+class Universe
+{
+    public function __toString() {
+        return $this->copyright . ' - ' .$this->name;
+    }
+    
+    public function __construct() {
+        $this->designs = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+    
+    public function routingArray()
+    {
+        return array(
+            'universeId' => $this->id,
+        );
+    }
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    public $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255, unique=true)
+     */
+    public $name;
+
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="code", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    public $code;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="Copyright", inversedBy="universes", cascade={"persist"})
+     * @ORM\JoinColumn(name="universe_id", nullable=true, onDelete="CASCADE")
+     * @Assert\NotBlank()
+     */
+    public $copyright;
+    
+    /**
+     * 
+     * @ORM\OneToMany(targetEntity="Design", mappedBy="universe")
+     */
+    protected $designs;
+    
+    /**
+     * Renvoie le nom complet
+     *
+     */
+    public function getFullName() {
+        return '#'. $this->id . ' - ' .$this->name;
+    }
+    
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set name
+     *
+     * @param string $name
+     *
+     * @return Universe
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Get name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+    
+     /**
+     * Set code
+     *
+     * @param string $code
+     *
+     * @return Universe
+     */
+    public function setCode($code)
+    {
+        $this->code = $code;
+
+        return $this;
+    }
+
+    /**
+     * Get code
+     *
+     * @return string
+     */
+    public function getCode()
+    {
+        return $this->code;
+    }
+    
+    /**
+     * Set Copyright
+     *
+     * @param \AppBundle\Entity\Copyright $copyright
+     *
+     * @return Universe
+     */
+    public function setCopyright($copyright)
+    {
+        $this->copyright = $copyright;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \AppBundle\Entity\Copyright
+     */
+    public function getCopyright()
+    {
+        return $this->copyright;
+    }
+    
+    /**
+     * Add design
+     *
+     * @param \AppBundle\Entity\Design $design
+     * @return Universe
+     */
+    public function addDesign(\AppBundle\Entity\Design $design)
+    {
+        $this->designs[] = $design;
+
+        return $this;
+    }
+
+    /**
+     * Remove design
+     *
+     * @param \AppBundle\Entity\Design $design
+     */
+    public function removeDesign(\AppBundle\Entity\Design $design)
+    {
+        $this->designs->removeElement($design);
+    }
+
+    /**
+     * Get designs
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getDesigns()
+    {
+        return $this->designs;
+    }
+}
+

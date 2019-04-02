@@ -1,0 +1,660 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+use AppBundle\Traits\PhotoableEntity;
+/**
+ * Contact
+ *
+ * @ORM\Table(name="nsdh_customer")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\ContactRepository")
+ */
+class Contact
+{
+    const GENDER_MALE = 1;
+    const GENDER_FEMALE = 2;
+    
+    const DISCOVERY_CONVENTION = 1;
+    const DISCOVERY_FB = 2;
+    const DISCOVERY_INSTAGRAM = 3;
+    const DISCOVERY_YOUTUBE = 4;
+    const DISCOVERY_TV = 5;
+    const DISCOVERY_PRESS = 6;
+    const DISCOVERY_FRIENDS = 7;
+    const DISCOVERY_INTERNET = 8;
+    const DISCOVERY_OTHER = 9;
+    
+    const TYPE_PROSPECT = 1;
+    const TYPE_CUSTOMER = 2;
+    const TYPE_PROVIDER = 3;
+    const TYPE_PRESS = 4;
+    const TYPE_INFLUENCER = 5;
+    const TYPE_PARTNER = 6;
+    const TYPE_DISTRIBUTOR = 7;
+    
+    const INVOICE_TVA = 1;
+    const INVOICE_UE = 2;
+    const INVOICE_NOT_UE = 3;
+    
+    public function __construct() {
+        $this->type = self::TYPE_CUSTOMER;
+        $this->typeInvoice = self::INVOICE_TVA;
+        $this->quotations = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+    
+    public function routingArray()
+    {
+        return array(
+            'contactId' => $this->id,
+        );
+    }
+
+    public function __toString()
+    {
+        return $this->firstname.' '.$this->lastname;
+    }
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    public $id;
+    
+    /*
+     * Hook timestampable behavior
+     * updates createdAt, updatedAt fields
+     */
+    use TimestampableEntity;
+    
+    /*
+     * Hook photoable behavior
+     */
+    use PhotoableEntity;
+    static public function getImageTypeCodes()
+    {
+        return array(
+            'small' => "AVATAR_SMALL",
+            'medium' => "AVATAR_MEDIUM",
+            'large' => "AVATAR_LARGE",
+        );
+    }
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="firstname", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    public $firstname;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="lastname", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    public $lastname;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="phone", type="string", length=255, nullable=true)
+     */
+    private $phone;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="email", type="string", length=255, nullable=true)
+     * 
+     */
+    private $email;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="description", type="text", nullable=true)
+     */
+    private $description;
+    
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="birthdate", type="datetime", nullable=true)
+     */
+    private $birthdate;
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="gender", type="integer", nullable=true)
+     */
+    private $gender;
+      
+    /**
+     * @ORM\ManyToOne(targetEntity="Address", cascade={"persist","remove"})
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     * @Assert\Valid()
+     */
+    private $address;
+    
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="newsletter", type="boolean", nullable=true)
+     */
+    private $newsletter;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="discovery", type="integer", nullable=true)
+     */
+    private $discovery;
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="type", type="integer", nullable=true)
+     * @Assert\NotBlank()
+     */
+    private $type;
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="tva", type="string", length=255, nullable=true)
+     */
+    public $tva;
+    
+     /**
+     * @var int
+     *
+     * @ORM\Column(name="typeInvoice", type="integer", nullable=true)
+     * @Assert\NotBlank()
+     */
+    private $typeInvoice;
+    
+    /**
+     * @ORM\OneToMany(targetEntity="Quotaiton", mappedBy="contact")
+     */
+    private $quotations;
+    
+    /**
+     * @Assert\Callback
+     */
+    public function checkTva(ExecutionContextInterface $context)
+    {
+        // Vérifier que la taille du fichier
+        if ($this->typeInvoice == self::INVOICE_UE && empty($this->tva)) {
+            $context->buildViolation('Veuillez précisez le numéro de TVA nécessaire pour la facturation')
+                    ->atPath('tva')
+                    ->addViolation();
+        }
+    }
+    
+    /**
+     * Renvoie la liste des sources de dévouverte pour l'affichage dans les formulaires
+     */
+    static public function getDiscoveryLabels(){
+        $labels = array(
+            self::DISCOVERY_CONVENTION => 'Convention',
+            self::DISCOVERY_FB => 'Facebook',
+            self::DISCOVERY_INSTAGRAM => 'Instagram',
+            self::DISCOVERY_YOUTUBE => 'Youtube',
+            self::DISCOVERY_TV => 'Télévision',
+            self::DISCOVERY_PRESS => 'Presse/Blog',
+            self::DISCOVERY_FRIENDS => 'Ami/Famille',
+            self::DISCOVERY_INTERNET => 'Internet',
+            self::DISCOVERY_OTHER => 'Autre'
+        );
+        
+        return $labels;
+    }
+
+    /**
+     * Renvoie le label de la découverte
+     */
+    public function getDiscoveryLabel()
+    {
+        return $this->discovery ? $this->getDiscoveryLabels()[$this->discovery] : '';
+    }
+    
+    
+    /**
+     * Renvoie la liste des types de contact pour l'affichage dans les formulaires
+     */
+    static public function getTypeLabels(){
+        
+        $labels = array(
+            self::TYPE_PROSPECT => 'Prospect',
+            self::TYPE_CUSTOMER => 'Client',
+            self::TYPE_PROVIDER => 'Fournisseur',
+            self::TYPE_PRESS => 'Presse/TV',
+            self::TYPE_INFLUENCER => 'Influenceur',
+            self::TYPE_PARTNER => 'Partenaire/Collab',
+            self::TYPE_DISTRIBUTOR => 'Distributeur',
+        );
+        
+        return $labels;
+    }
+
+    /**
+     * Renvoie le label de la découverte
+     */
+    public function getTypeLabel()
+    {
+        return $this->type ? $this->getTypeLabels()[$this->type] : '';
+    }
+    
+    /**
+     * Renvoie la liste des typeInvoices de contact pour l'affichage dans les formulaires
+     */
+    static public function getTypeInvoiceLabels(){
+        
+        $labels = array(
+            self::INVOICE_TVA => 'Facturation TVA',
+            self::INVOICE_UE => 'Entreprise UE (hors France) - Facturation HT',
+            self::INVOICE_NOT_UE => 'Hors UE - Facturation HT',
+        );
+        
+        return $labels;
+    }
+
+    /**
+     * Renvoie le label de la découverte
+     */
+    public function getTypeInvoiceLabel()
+    {
+        return $this->typeInvoice ? $this->getTypeInvoiceLabels()[$this->typeInvoice] : '';
+    }
+    
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set firstname
+     *
+     * @param string $firstname
+     *
+     * @return Contact
+     */
+    public function setFirstname($firstname)
+    {
+        $this->firstname = $firstname;
+
+        return $this;
+    }
+
+    /**
+     * Get firstname
+     *
+     * @return string
+     */
+    public function getFirstname()
+    {
+        return $this->firstname;
+    }
+
+    /**
+     * Set lastname
+     *
+     * @param string $lastname
+     *
+     * @return Contact
+     */
+    public function setLastname($lastname)
+    {
+        $this->lastname = $lastname;
+
+        return $this;
+    }
+
+    /**
+     * Get lastname
+     *
+     * @return string
+     */
+    public function getLastname()
+    {
+        return $this->lastname;
+    }
+
+    /**
+     * Set phone
+     *
+     * @param string $phone
+     *
+     * @return Contact
+     */
+    public function setPhone($phone)
+    {
+        $this->phone = $phone;
+
+        return $this;
+    }
+
+    /**
+     * Get phone
+     *
+     * @return string
+     */
+    public function getPhone()
+    {
+        return $this->phone;
+    }
+
+    /**
+     * Set email
+     *
+     * @param string $email
+     *
+     * @return Contact
+     */
+    public function setEmail($email)
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    /**
+     * Get email
+     *
+     * @return string
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
+    
+    /**
+     * Set description.
+     *
+     * @param string $description
+     *
+     * @return User
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * Get description.
+     *
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * Set birthdate
+     *
+     * @param \DateTime $birthdate
+     *
+     * @return Contact
+     */
+    public function setBirthdate($birthdate)
+    {
+        $this->birthdate = $birthdate;
+
+        return $this;
+    }
+
+    /**
+     * Get birthdate
+     *
+     * @return \DateTime
+     */
+    public function getBirthdate()
+    {
+        return $this->birthdate;
+    }
+
+    /**
+     * Set gender
+     *
+     * @param integer $gender
+     *
+     * @return Contact
+     */
+    public function setGender($gender)
+    {
+        $this->gender = $gender;
+
+        return $this;
+    }
+
+    /**
+     * Get gender
+     *
+     * @return integer
+     */
+    public function getGender()
+    {
+        return $this->gender;
+    }
+    
+    /**
+     * Get gender list
+     *
+     * @return string
+     */
+    public static function getGenderList()
+    {
+        return array(
+            self::GENDER_MALE => 'Homme',
+            self::GENDER_FEMALE => 'Femme',
+        );
+    }
+
+    /**
+     * Get gender label
+     *
+     * @return string
+     */
+    public function getGenderLabel()
+    {
+        if ($this->gender == null) return null;
+        
+        $genders = self::getGenderList();
+        $htmlClasses = array (
+            self::GENDER_MALE => 'indigo',
+            self::GENDER_FEMALE => 'pink',
+        );
+        $icons = array (
+            self::GENDER_MALE => 'fa-mars',
+            self::GENDER_FEMALE => 'fa-venus',
+        );
+        return '<div class="chip ' . $htmlClasses[$this->gender] . ' lighten-3 white-text"><i class="fa '. $icons[$this->gender] .' mr-5"></i>' . $genders[$this->gender] . '</div>';
+    }
+    
+     /**
+     * Get Shortname.
+     *
+     * @return string
+     */
+    public function getShortname()
+    {
+        if (($this->firstname != null) && ($this->lastname != null)) {
+            return substr($this->firstname, 0, 1) . '. '. $this->lastname;
+        } else {
+            return $this->username;
+        }
+    }
+
+    /**
+     * Get full name.
+     *
+     * @return string
+     */
+    public function getFullName()
+    {
+        return '#'.$this->id . ' - '.$this->firstname.' '.$this->lastname;
+    }
+
+
+    /**
+     * Set address
+     *
+     * @param \AppBundle\Entity\Address $address
+     *
+     * @return Contact
+     */
+    public function setAddress(\AppBundle\Entity\Address $address)
+    {
+        $this->address = $address;
+
+        return $this;
+    }
+
+    /**
+     * Get address
+     *
+     * @return \AppBundle\Entity\Address
+     */
+    public function getAddress()
+    {
+        return $this->address;
+    }
+
+    /**
+     * Set newsletter
+     *
+     * @param boolean $newsletter
+     *
+     * @return Contact
+     */
+    public function setNewsletter($newsletter)
+    {
+        $this->newsletter = $newsletter;
+
+        return $this;
+    }
+
+    /**
+     * Get newsletter
+     *
+     * @return boolean
+     */
+    public function getNewsletter()
+    {
+        return $this->newsletter;
+    }
+
+    /**
+     * Set discovery
+     *
+     * @param integer $discovery
+     *
+     * @return Contact
+     */
+    public function setDiscovery($discovery)
+    {
+        $this->discovery = $discovery;
+
+        return $this;
+    }
+
+    /**
+     * Get discovery
+     *
+     * @return integer
+     */
+    public function getDiscovery()
+    {
+        return $this->discovery;
+    }
+
+    /**
+     * Set type
+     *
+     * @param integer $type
+     *
+     * @return Contact
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return integer
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * Set tva
+     *
+     * @param string $tva
+     *
+     * @return Contact
+     */
+    public function setTva($tva)
+    {
+        $this->tva = $tva;
+
+        return $this;
+    }
+
+    /**
+     * Get tva
+     *
+     * @return string
+     */
+    public function getTva()
+    {
+        return $this->tva;
+    }
+
+    /**
+     * Set typeInvoice
+     *
+     * @param integer $typeInvoice
+     *
+     * @return Contact
+     */
+    public function setTypeInvoice($typeInvoice)
+    {
+        $this->typeInvoice = $typeInvoice;
+
+        return $this;
+    }
+
+    /**
+     * Get typeInvoice
+     *
+     * @return integer
+     */
+    public function getTypeInvoice()
+    {
+        return $this->typeInvoice;
+    }
+}

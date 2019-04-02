@@ -1,0 +1,50 @@
+{% extends 'AppBundle:Layout:layout.html.twig' %}
+
+{% block stylesheets %}
+{% endblock %}
+
+
+{% block main_content %}
+<!-- Product Helper -->
+<div class="row mt-10">
+    <div class="col s12">
+        <div class="card">
+            <div class="title">
+                <h5><i class="fa fa-bolt mr-10"></i>Liste des utilisateurs</h5>
+                <a class="minimize" href="#"><i class="mdi-navigation-expand-less"></i></a> 
+            </div> 
+            <div class="content">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>UUID</th>
+                            <th>Email</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>{{ user['uuid'] }}</td>
+                            <td>{{ user['email'] }}</td>
+                            <td><a class="btn red white-text" href="{#{{ path('bankin_user_delete', {'uuid' : user['uuid']})}}#}" target="_blank">Supprimer</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div> 
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block javascript %}
+
+<script type="text/javascript">
+$(document).ready(function() {
+    
+});
+
+</script>
+{%endblock%}

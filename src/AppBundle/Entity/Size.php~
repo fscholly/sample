@@ -1,0 +1,109 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+use Doctrine\Common\Collections\ArrayCollection as Collection;
+
+/**
+ * DesignType
+ *
+ * @ORM\Table(name="nshd_size")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\SizeRepository")
+ */
+class Size
+{
+    public function __toString() {
+        return $this->name;
+    }
+    
+    public function __construct(){
+        $this->sizes = new Collection();
+    }
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255)
+     */
+    private $name;
+
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="DesignType", inversedBy="sizes", cascade={"persist"})
+     * @ORM\JoinColumn(name="design_type_id", nullable=true, onDelete="CASCADE")
+     */
+    private $designType;
+    
+    
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set name
+     *
+     * @param string $name
+     *
+     * @return DesignType
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Get name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+    
+    /**
+     * Set DesignType
+     *
+     * @param \AppBundle\Entity\DesignType $designType
+     *
+     * @return Design
+     */
+    public function setDesignType($designType)
+    {
+        $this->designType = $designType;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \AppBundle\Entity\DesignType
+     */
+    public function getDesignType()
+    {
+        return $this->designType;
+    }
+    
+    
+}
+

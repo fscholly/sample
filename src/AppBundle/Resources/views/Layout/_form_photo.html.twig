@@ -1,0 +1,8 @@
+{% form_theme form 'form_layout.html.twig' %}
+
+{% if label is defined %}<label>{{ label }}</label>{% endif %}
+    {{ form_widget(form.photo.file) }}
+    {{ form_errors(form.photo.file) }}
+<div class="hidden">
+    {{ form_row(form.photo.updatedAt) }}
+</div>

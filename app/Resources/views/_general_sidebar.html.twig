@@ -1,0 +1,161 @@
+<li class="yay-user-info">
+    <a href="{{ path('fos_user_profile_show') }}">
+        <img src="{{ app.user.photo.imageMedium.webPath | default(null) }}" alt="{{ app.user.fullname }}" class="circle">
+        <h3 class="yay-user-info-name">{{ app.user.firstname }}</h3>
+        <div class="yay-user-location">
+            <i class="fa fa-connectdevelop"></i> Resonnance
+        </div>
+    </a>
+</li>
+<li class="label">Menu application</li>
+<li {% if route == 'homepage' %}class="open"{% endif %}>
+    <a href="{{ path('homepage') }}" class=" waves-effect waves-blue"> <i class="fa fa-home"></i>Tableau de bord {#<span class="badge new">new</span>#}</a>
+</li>
+<li {% if  route starts with 'bankin_'%}class="open"{% endif %}>
+    <a href="#" class="yay-sub-toggle waves-effect"> <i class="fa fa-euro"></i> Gestion bancaire
+        <span class="yay-collapse-icon mdi-navigation-expand-more"></span>
+    </a>
+    <ul>
+        <li {% if route starts with 'bankin_user_' %} class="open"{% endif %}>
+            <a href="#" class="yay-sub-toggle waves-effect waves-blue"><i class="fa fa-user mr-5"></i> Utilisateur
+                <span class="yay-collapse-icon mdi-navigation-expand-more"></span>
+            </a>
+            <ul>
+                <li {% if route == 'bankin_user_show' %}class="open"{% endif %}>
+                    <a href="{{ path('bankin_user_show') }}" class=" waves-effect waves-blue"> <i class="fa fa-hand-o-right mr-5"></i> Gérer mes comptes</a>
+                </li>
+                <li {% if route == 'bankin_user_account_sync' %}class="open"{% endif %}>
+                    <a href="{{ path('bankin_user_account_sync') }}" class=" waves-effect waves-blue"> <i class="fa fa-cog mr-5"></i> Synchroniser mes comptes</a>
+                </li>
+            </ul>
+        </li>
+        <li {% if route == 'bankin_users' %}class="open"{% endif %}>
+            <a href="{{ path('bankin_users') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Les utilisateurs Bankin</a>
+        </li>
+        <li {% if route == 'bankin_banks' %}class="open"{% endif %}>
+            <a href="{{ path('bankin_banks') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Banques</a>
+        </li>
+        <li {% if route == 'bankin_categories' %}class="open"{% endif %}>
+            <a href="{{ path('bankin_categories') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Catégories</a>
+        </li>
+        <li {% if route starts with 'sync_bankin_' %} class="open"{% endif %}>
+            <a href="#" class="yay-sub-toggle waves-effect waves-blue"><i class="fa fa-cogs mr-5"></i> Synchronisation
+                <span class="yay-collapse-icon mdi-navigation-expand-more"></span>
+            </a>
+            <ul>
+                <li {% if route starts with 'sync_bankin_categories' %}class="open"{% endif %}>
+                    <a href="{{ path('sync_bankin_categories') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Catégories</a>
+                </li>
+                <li {% if route starts with 'sync_bankin_banks' %}class="open"{% endif %}>
+                    <a href="{{ path('sync_bankin_banks') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Banques</a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</li>
+<li {% if  route starts with 'quotation_' or route starts with 'invoice_'%}class="open"{% endif %}>
+    <a href="#" class="yay-sub-toggle waves-effect"> <i class="fa fa-exchange"></i> Gestion commerciale
+        <span class="yay-collapse-icon mdi-navigation-expand-more"></span>
+    </a>
+    <ul>
+        <li {% if route starts with 'quotation_' %}class="open"{% endif %}>
+            <a href="{{ path('quotation_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-cart-arrow-down mr-5"></i> Liste des commandes</a>
+        </li>
+        <li {% if route starts with 'invoice_' %}class="open"{% endif %}>
+            <a href="{{ path('invoice_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-file-text-o mr-5"></i> Liste des factures</a>
+        </li>
+        <li {% if route starts with 'coupon_' %}class="open"{% endif %}>
+            <a href="{{ path('coupon_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-barcode mr-5"></i> Liste des coupons</a>
+        </li>
+         {% if is_granted('ROLE_CONTRIB') %}
+        <li {% if route starts with 'op_event_' %} class="open"{% endif %}>
+            <a href="#" class="yay-sub-toggle waves-effect waves-blue"><i class="fa fa-cogs mr-5"></i> Règlages
+                <span class="yay-collapse-icon mdi-navigation-expand-more"></span>
+            </a>
+            <ul>
+                <li {% if route starts with 'op_event_' %}class="open"{% endif %}>
+                    <a href="{{ path('op_event_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Liste des évènements</a>
+                </li>
+            </ul>
+        </li>
+        {% endif %}
+    </ul>
+</li>
+<li {% if route starts with 'product_' or route starts with 'service_' or route starts with 'design_' or route starts with 'feature_' 
+       or route starts with 'unit_' or route == 'product_import'  %}class="open"{% endif %}>
+    <a href="#" class="yay-sub-toggle waves-effect"> <i class="fa fa-magic"></i> Produits & Services
+        <span class="yay-collapse-icon mdi-navigation-expand-more"></span>
+    </a>
+    <ul>
+        <li {% if route starts with 'product_' and not (route starts with 'product_range_') and not (route == 'product_import') %}class="open"{% endif %}>
+            <a href="{{ path('product_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-diamond mr-5"></i> Catalogue de produit</a>
+        </li>
+        {% if is_granted('ROLE_CONTRIB') %}
+        <li {% if route starts with 'service_' and not (route starts with 'service_range') %}class="open"{% endif %}>
+            <a href="{{ path('service_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-leanpub mr-5"></i> Liste des services</a>
+        </li>
+        <li {% if route starts with 'product_range_' or route starts with 'service_range_' or route starts with 'design_' or route starts with 'feature_' 
+               or route starts with 'unit_' or route == 'product_import' %} class="open"{% endif %}>
+            <a href="#" class="yay-sub-toggle waves-effect waves-blue"><i class="fa fa-cogs mr-5"></i> Règlages
+                <span class="yay-collapse-icon mdi-navigation-expand-more"></span>
+            </a>
+            <ul>
+                <li {% if route starts with 'design_' and not (route starts with 'design_type_') %}class="open"{% endif %}>
+                    <a href="{{ path('design_index') }}" class=" waves-effect waves-blue"> <i class="fa mdi-content-content-cut mr-5"></i> Liste des modèles</a>
+                </li>
+                <li {% if route == 'product_import' %}class="open"{% endif %}>
+                    <a href="{{ path('product_import') }}" class=" waves-effect waves-blue"> <i class="fa fa-cloud-upload mr-5"></i> Importer des produits</a>
+                </li>
+                <li {% if route starts with 'design_type_' %}class="open"{% endif %}>
+                    <a href="{{ path('design_type_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Type de modèle</a>
+                </li>
+                <li {% if route starts with 'product_range_' %}class="open"{% endif %}>
+                    <a href="{{ path('product_range_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Gamme de produit</a>
+                </li>
+                <li {% if route starts with 'feature_' and not (route starts with 'feature_type_') %}class="open"{% endif %}>
+                    <a href="{{ path('feature_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Caractéristique</a>
+                </li>
+                <li {% if route starts with 'feature_type_' %}class="open"{% endif %}>
+                    <a href="{{ path('feature_type_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Type de caract.</a>
+                </li>
+                <li {% if route starts with 'service_range_' %}class="open"{% endif %}>
+                    <a href="{{ path('service_range_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Gamme de service</a>
+                </li>
+                <li {% if route starts with 'unit_' %}class="open"{% endif %}>
+                    <a href="{{ path('unit_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Unité de quantité</a>
+                </li>
+            </ul>
+        </li>
+        {% endif %}
+    </ul>
+</li>
+{% if is_granted('ROLE_CONTRIB') %}
+<li {% if  route starts with 'licence_' or route starts with 'universe_' or route starts with 'copyright_' %}class="open"{% endif %}>
+    <a href="#" class="yay-sub-toggle waves-effect"> <i class="mdi-content-flag"></i> Gestion des licences
+        <span class="yay-collapse-icon mdi-navigation-expand-more"></span>
+    </a>
+    <ul>
+        <li {% if route starts with 'licence_' %}class="open"{% endif %}>
+            <a href="{{ path('licence_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Liste des licences</a>
+        </li>
+        <li {% if route starts with 'universe_' %}class="open"{% endif %}>
+            <a href="{{ path('universe_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-sun-o mr-5"></i> Liste des univers</a>
+        </li>
+        <li {% if route starts with 'copyright_' %}class="open"{% endif %}>
+            <a href="{{ path('copyright_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-institution mr-5"></i> Ayants droit</a>
+        </li>
+    </ul>
+</li>
+{% endif %}
+<li {% if route starts with 'contact_' %}class="open"{% endif %}>
+    <a href="{{ path('contact_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-users mr-5"></i> Liste des contacts</a>
+</li>
+{% if is_granted('ROLE_GEST') %}
+<li class="label">Menu configuration</li>
+<li {% if route == 'administration_theme' %}class="open"{% endif %}>
+    <a href="{{ path('administration_theme') }}" class=" waves-effect waves-blue"> <i class="fa fa-picture-o mr-5"></i> Thème</a>
+</li>
+<li {% if route starts with 'user_'  %}class="open"{% endif %}>
+    <a href="{{ path('user_index') }}" class=" waves-effect waves-blue"> <i class="fa fa-list mr-5"></i> Utilisateurs</a>
+</li>
+{% endif %}

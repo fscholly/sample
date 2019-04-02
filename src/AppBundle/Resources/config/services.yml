@@ -1,0 +1,21 @@
+services:
+    redirect.after.login:
+        class: AppBundle\Services\AfterLoginRedirection
+        arguments: ['@router']
+    app.helper:
+        class: AppBundle\Services\AppHelper
+        arguments: ['@doctrine.orm.entity_manager']
+    app.breadcrumbs_handler:
+        class: AppBundle\Services\BreadcrumbsHandler
+        arguments: ['@doctrine.orm.entity_manager', '@white_october_breadcrumbs', '@session', '@request_stack', '@router']
+    app.config_handler:
+        class: AppBundle\Services\ConfigHandler
+        arguments: ['@doctrine.orm.entity_manager', '@security.token_storage', '@security.authorization_checker']
+        tags:
+            -  { name: twig.extension }
+    app.mailer:
+        class: AppBundle\Services\AppMailer
+        arguments: ['@app.helper','@mailer','@logger', '%app.contact.customer%', '%app.contact.prod%',  '%app.contact.admin%']
+        tags:
+            - { name: monolog.logger, channel: mailer }
+        public: true

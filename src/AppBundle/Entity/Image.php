@@ -1,0 +1,312 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+
+/**
+ * 
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\ImageRepository")
+ * @ORM\Table(name="nsdh_image")
+ * @ORM\HasLifecycleCallbacks
+ *
+ */
+class Image extends \AppBundle\Entity\Document
+{
+    public function __construct(\AppBundle\Entity\ImageType $imageType = null) {
+        parent::__construct();
+        
+        $this->imageType = $imageType;
+    }
+    
+    public function routingArray()
+    {
+        return array(
+            'imageId' => $this->id,
+            );
+    }
+    
+    public function __toString()
+    {
+        return 'image #'.$this->id;
+    }
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\ImageType", cascade={"persist"})
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     */
+    private $imageType;
+    
+    private $imageData;
+    
+    /**
+     * @Assert\Callback
+     */
+    public function checkFileType(ExecutionContextInterface $context)
+    {
+        if($this->file){
+            // Vérifier que le fichier est une image
+            $info = getimagesize($this->file);
+            $type = $info[2];
+
+            if(!in_array($type , array(IMAGETYPE_GIF , IMAGETYPE_JPEG ,IMAGETYPE_PNG , IMAGETYPE_BMP)))
+            {
+                $context->buildViolation('Ce fichier n\'est pas une image.')
+                        ->atPath('file')
+                        ->addViolation();
+            }
+        }
+    }
+    
+    /**
+     * Préparer l'upload du nouveau fichier
+     *
+     * @ORM\PrePersist()
+     * @ORM\PreUpdate()
+     */
+    public function prepareUpload()
+    {
+        if (null != $this->imageData) {
+            // Supprimer l'ancien fichier
+            $this->removeUpload();
+            
+            // Fabriquer l'image à partir de son code en base64
+            $exp = explode(',', $this->imageData);
+            $base64 = array_pop($exp);
+            $data = base64_decode($base64);
+            
+            // Créer l'image dans une zone de stockage temporaire
+            $uploadTmpDir = $this->getTmpRootDir();
+            $filename =  'image-' . uniqid(rand(1,10)) . '.png';
+            $filepath = $uploadTmpDir . '/' . $filename;
+            if (!file_exists($uploadTmpDir)) {
+                mkdir($uploadTmpDir, 0775, true);
+            }
+            file_put_contents($filepath, $data);
+            
+            $this->setFile(null);
+            $this->createFrom($filepath, $filename);
+            
+            unlink($filepath);
+            unset($this->imageData);
+        }
+        if (null !== $this->file) {
+            // Supprimer l'ancien fichier
+            $this->removeUpload();
+            
+            // générer un nouveau nom unique pour le futur fichier
+            $ext = pathinfo($this->file->getClientOriginalName(), PATHINFO_EXTENSION);
+            $unique_id = uniqid($this->id);
+            $this->filepath = 'image-'.$unique_id.'.'.$ext;
+        }
+    }
+    
+    /**
+     * Supprimer l'ancienne image
+     * Récupérer l'image uploadé
+     * Redimensionner l'image
+     *
+     * @ORM\PostPersist()
+     * @ORM\PostUpdate()
+     */
+    public function upload()
+    {
+        if (null === $this->file) {
+            return;
+        }
+
+        parent::upload();
+        
+        // Redimensionner l'image
+        $this->resizeImage();
+    }
+    
+    /**
+     * Delete file after delete entity.
+     *
+     * @ORM\PreRemove()
+     */
+    public function removeUpload()
+    {
+        if ($this->filepath && ($file = $this->getAbsolutePath()) && (file_exists($this->getAbsolutePath()))) {
+            unlink($file);
+        }
+    }
+    
+    /**
+     * Créer un fichier à partir d'une fichier source
+     * 
+     * @param type $source     Chemin absolu vers le fichier source à copier
+     * @param type $filepath   Nom du fichier destination
+     */
+    public function createFrom($source, $filepath) 
+    {
+        
+        parent::createFrom($source, $filepath);
+        
+        // Redimensionner l'image
+        $this->resizeImage();
+    }
+    
+    /**
+     * Redimensionne une image à partir d'un fichier source.
+     *
+     * @return int | void
+     */
+    public function resizeImage()
+    {
+        $imageType = $this->getImageType();
+        $maxHeight = $imageType ? $imageType->getMaxHeight() : 300 ;
+        $maxWidth = $imageType ? $imageType->getMaxWidth() : 300 ;
+        
+        $sourceFilename = $this->getAbsolutePath();
+
+        list($width, $height) = getimagesize($sourceFilename);
+        
+        $imgInfo = getimagesize($sourceFilename);
+        $imgType = $imgInfo[2];
+
+        //Calcul des nouvelles dimensions
+        if (($width == 0) || ($height == 0)) {
+            return;
+        } else {
+            $rap = $width / $height;
+        }
+
+        // Calcul de la longueur
+        if ($width > $maxWidth) {
+            $newWidth = $maxWidth;
+            $newHeight = $newWidth / $rap;
+        } else {
+            $newWidth = $width;
+            $newHeight = $height;
+        }
+
+        // Calcul de la largeur
+        if ($newHeight > $maxHeight) {
+            $newHeight = $maxHeight;
+            $newWidth = $rap * $newHeight;
+        }
+
+        switch ($imgType) {
+            case IMAGETYPE_JPEG:
+                $source = imagecreatefromjpeg($sourceFilename);  //create jpg image
+                break;
+            case IMAGETYPE_GIF:
+                $source = imagecreatefromgif($sourceFilename); //create gif image
+                break;
+            case IMAGETYPE_PNG:
+                $source = imagecreatefrompng($sourceFilename); //create png image
+                break;
+        }
+        
+        $imgNew = imagecreatetruecolor($newWidth, $newHeight);
+        
+        if ($imgType == IMAGETYPE_PNG) {
+            // Conserver la transparence
+            imagealphablending($imgNew, false);
+            imagesavealpha($imgNew, true);
+            imagecolortransparent($imgNew, imagecolorallocate($imgNew, 0, 0, 0));
+        }
+        else {
+            // Remplacer la transparence par la couleur blanche
+            $white = imagecolorallocate($imgNew, 255, 255, 255);
+            imagefill($imgNew, 0, 0, $white);
+        }
+        
+        imagecopyresampled($imgNew, $source, 0, 0, 0, 0, $newWidth, $newHeight, imagesx($source), imagesy($source));
+
+        switch ($imgType) {
+            case IMAGETYPE_JPEG:
+                imagejpeg($imgNew, $sourceFilename, 75);
+                break;
+            case IMAGETYPE_GIF:
+                imagegif($imgNew, $sourceFilename);
+                break;
+            case IMAGETYPE_PNG:
+                imagepng($imgNew, $sourceFilename);
+                break;
+        }
+
+        return 0;
+    }
+    
+    public function getDataImageSize()
+    {
+        if($absolutePath = $this->getAbsolutePath()) {
+            list($width, $height) = getimagesize($absolutePath);
+            return $width . 'x' . $height;
+        }
+        return null;
+    }
+    
+    /**
+     * Get absolute path for document
+     *
+     * @return string
+     */
+    public function getAbsolutePath()
+    {
+        if (null === $this->filepath) {
+            if($this->getImageType()) {
+                return __DIR__.'/../../../web'.$this->getImageType()->getDefaultFilepath();
+            }
+            return null;
+        }
+
+        return $this->getUploadRootDir().'/'.$this->filepath;
+    }
+    
+    /**
+     * Get web path for document
+     *
+     * @return string
+     */
+    public function getWebPath()
+    {
+        if (null === $this->filepath) {
+            if($this->getImageType()) {
+                return $this->getImageType()->getDefaultFilepath();
+            }
+            return null;
+        }
+
+        return $this->getUploadDir().'/'.$this->filepath;
+    }
+    
+    /**
+     * Set imageType
+     *
+     * @param \AppBundle\Entity\ImageType $imageType
+     *
+     * @return Image
+     */
+    public function setImageType(\AppBundle\Entity\ImageType $imageType)
+    {
+        $this->imageType = $imageType;
+
+        return $this;
+    }
+
+    /**
+     * Get imageType
+     *
+     * @return \AppBundle\Entity\ImageType
+     */
+    public function getImageType()
+    {
+        return $this->imageType;
+    }
+    
+    public function getImageData()
+    {
+        return $this->imageData;
+    }
+    
+    public function setImageData($imageData = null)
+    {
+        $this->imageData = $imageData;
+    }
+}

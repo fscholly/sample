@@ -1,0 +1,197 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+use Doctrine\Common\Collections\ArrayCollection as Collection;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
+/**
+ * FeatureType
+ *
+ * @ORM\Table(name="nsdh_feature_type")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\FeatureTypeRepository")
+ * @UniqueEntity({"code"})
+ */
+class FeatureType
+{
+    public function __toString() {
+        return $this->name;
+    }
+    
+    public function __construct() {
+        $this->features = new Collection();
+    }
+    
+    public function routingArray()
+    {
+        return array(
+            'featureTypeId' => $this->id,
+        );
+    }
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    public $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255)
+     */
+    public $name;
+
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="code", type="string", length=255, unique=true)
+     * @Assert\NotBlank()
+     */
+    private $code;
+
+    /**
+     * 
+     * @ORM\OneToMany(targetEntity="Feature", mappedBy="featureType", cascade={"persist","remove"})
+     */
+    private $features;
+    
+     /**
+     * @ORM\ManyToOne(targetEntity="Service", cascade={"persist"})
+     * @ORM\JoinColumn(name="service_id", nullable=true, onDelete="SET NULL")
+     */
+    public $service;
+
+    /**
+     * Renvoie le nom complet
+     *
+     */
+    public function getFullName() {
+        return '#'. $this->id . ' - ' .$this->name;
+    }
+    
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set name
+     *
+     * @param string $name
+     *
+     * @return FeatureType
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Get name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+    
+    
+    /**
+     * Set code
+     *
+     * @param string $code
+     *
+     * @return FeatureType
+     */
+    public function setCode($code)
+    {
+        $this->code = $code;
+
+        return $this;
+    }
+
+    /**
+     * Get code
+     *
+     * @return string
+     */
+    public function getCode()
+    {
+        return $this->code;
+    }
+    
+    /**
+     * Add feature
+     *
+     * @param \AppBundle\Entity\Feature $feature
+     * @return FeatureType
+     */
+    public function addFeature(\AppBundle\Entity\Feature $feature)
+    {
+        $this->features[] = $feature;
+
+        return $this;
+    }
+
+    /**
+     * Remove feature
+     *
+     * @param \AppBundle\Entity\Feature $feature
+     */
+    public function removeFeature(\AppBundle\Entity\Feature $feature)
+    {
+        $this->features->removeElement($feature);
+    }
+
+    /**
+     * Get features
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getFeatures()
+    {
+        return $this->features;
+    }
+    
+    /**
+     * Set Service
+     *
+     * @param \AppBundle\Entity\Service $service
+     *
+     * @return FeatureType
+     */
+    public function setService($service)
+    {
+        $this->service = $service;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \AppBundle\Entity\Service
+     */
+    public function getService()
+    {
+        return $this->service;
+    }
+    
+}
+

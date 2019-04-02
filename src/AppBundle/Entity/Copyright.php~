@@ -1,0 +1,167 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
+/**
+ * Copyright
+ *
+ * @ORM\Table(name="nsdh_copyright")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\CopyrightRepository")
+ * @UniqueEntity({"name"})
+ * @ORM\HasLifecycleCallbacks
+ */
+class Copyright
+{
+    public function __toString() {
+        return $this->name;
+    }
+    
+    public function __construct() {
+        $this->universes = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+    
+    public function routingArray()
+    {
+        return array(
+            'copyrightId' => $this->id,
+        );
+    }
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    public $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255, unique=true)
+     * @Assert\NotBlank()
+     */
+    public $name;
+
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="code", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    public $code;
+    
+    /**
+     * 
+     * @ORM\OneToMany(targetEntity="Universe", mappedBy="copyright", cascade={"persist","remove"})
+     */
+    private $universes;
+    
+    
+    /**
+     * Renvoie le nom complet
+     *
+     */
+    public function getFullName() {
+        return '#'. $this->id . ' - ' .$this->name;
+    }
+    
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set name
+     *
+     * @param string $name
+     *
+     * @return Copyright
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Get name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+    
+     /**
+     * Set code
+     *
+     * @param string $code
+     *
+     * @return Copyright
+     */
+    public function setCode($code)
+    {
+        $this->code = $code;
+
+        return $this;
+    }
+
+    /**
+     * Get code
+     *
+     * @return string
+     */
+    public function getCode()
+    {
+        return $this->code;
+    }
+    
+    /**
+     * Add universe
+     *
+     * @param \AppBundle\Entity\Universe $universe
+     * @return Copyright
+     */
+    public function addUniverse(\AppBundle\Entity\Universe $universe)
+    {
+        $this->universes[] = $universe;
+
+        return $this;
+    }
+
+    /**
+     * Remove universe
+     *
+     * @param \AppBundle\Entity\Universe $universe
+     */
+    public function removeUniverse(\AppBundle\Entity\Universe $universe)
+    {
+        $this->universes->removeElement($universe);
+    }
+
+    /**
+     * Get universes
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getUniverses()
+    {
+        return $this->universes;
+    }
+    
+}
+

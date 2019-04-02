@@ -1,0 +1,80 @@
+{% extends 'AppBundle:Layout:layout.html.twig' %}
+
+{% block stylesheets %}
+<!-- Datatable -->  
+{{ include('AppBundle:Layout:_datatable_css.html.twig') }}
+
+{% endblock %}
+
+
+{% block main_content %}
+<!-- Product Helper -->
+<div class="row mt-10">
+    <div class="col s12">
+        <div class="card">
+            <div class="title">
+                <h5><i class="fa fa-bolt mr-10"></i>Listes des comptes synchronisées : {{ synced }} / {{ bankinAccounts| length }}</h5>
+                <a class="minimize" href="#"><i class="mdi-navigation-expand-less"></i></a> 
+            </div> 
+            <div class="content">
+                <table id="datatable" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>A synchroniser ?</th>
+                            <th>Nom</th>
+                            <th>Solde</th>
+                            <th>Type</th>
+                            <th>Banque</th>
+                            <th>Mis à jour</th>
+                            <th>Date de synchronisation</th>
+                            <th>Id</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for bankinAccount in bankinAccounts %}
+                        <tr>
+                            <td>{{ bankinAccount.sync ? 'Oui' : 'Non' }}</td>
+                            <td>{{ bankinAccount.name }}</td>
+                            <td>{{ bankinAccount.balance }} {{ bankinAccount.currencyCode }}</td>
+                            <td>{{ bankinAccount.type }}</td>
+                            <td>{{ bankinAccount.bankinBank.name }}</td>
+                            <td>{% if bankinAccount.lastRefreshDate %}{{ bankinAccount.lastRefreshDate | date ('d/m/Y H:i:s') }}{% endif %}</td>
+                            <td>{% if bankinAccount.lastSyncDate %}{{ bankinAccount.lastSyncDate | date ('d/m/Y H:i:s') }}{% endif %}</td>
+                            <td>{{ bankinAccount.accountId }}</td>
+                            <td>
+                                <a class="btn btn-small" href="{{ path('bankin_user_transactions', bankinAccount.routingArray)}}">Consulter</a>
+                                <a class="btn btn-small blue" href="{{ path('bankin_user_transaction_sync', bankinAccount.routingArray)}}">Synchroniser</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>    
+            </div> 
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block javascript %}
+{{ include('AppBundle:Layout:_datatable_js.html.twig') }}
+
+<script type="text/javascript">
+jQuery(document).ready(function () {
+    "use strict";
+    
+    initAccountList();
+    
+});
+
+function initAccountList() {
+    var options = {
+        "cibFilter" : true
+    };
+    
+    CibDt.init(options);
+}
+
+</script>
+{%endblock%}

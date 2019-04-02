@@ -1,0 +1,65 @@
+{% extends 'AppBundle:Layout:layout.html.twig' %}
+
+{% block stylesheets %}
+<!-- Datatable -->  
+{{ include('AppBundle:Layout:_datatable_css.html.twig') }}
+
+{% endblock %}
+
+
+{% block main_content %}
+<!-- Product Helper -->
+<div class="row mt-10">
+    <div class="col s12">
+        <div class="card">
+            <div class="title">
+                <h5><i class="fa fa-bolt mr-10"></i>Listes des catégories synchronisées : {{ synced }} / {{ bankinCategories| length }}</h5>
+                <a class="minimize" href="#"><i class="mdi-navigation-expand-less"></i></a> 
+            </div> 
+            <div class="content">
+                <table id="datatable" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Parent</th>
+                            <th>Nom</th>
+                            <th>Id</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for bankinCategory in bankinCategories %}
+                        <tr>
+                            <td>{{ bankinCategory.parent.name | default('') }}</td>
+                            <td>{{ bankinCategory.name }}</td>
+                            <td>{{ bankinCategory.categoryId }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>    
+            </div> 
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block javascript %}
+{{ include('AppBundle:Layout:_datatable_js.html.twig') }}
+
+<script type="text/javascript">
+jQuery(document).ready(function () {
+    "use strict";
+    
+    initCategoryList();
+    
+});
+
+function initCategoryList() {
+    var options = {
+        "cibFilter" : true
+    };
+    
+    CibDt.init(options);
+}
+
+</script>
+{%endblock%}

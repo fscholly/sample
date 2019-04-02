@@ -1,0 +1,709 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+
+/**
+ * QuotationLine
+ *
+ * @ORM\Table(name="nsdh_quotation_line")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\QuotationLineRepository")
+ * @ORM\HasLifecycleCallbacks
+ */
+class QuotationLine
+{
+    /**
+     * Différents états de la ligne de commande
+     */
+    const QUOTATION_LINE_PENDING = 1;
+    const QUOTATION_LINE_BEGIN = 2;
+    const QUOTATION_LINE_IN_PROGRESS = 3;
+    const QUOTATION_LINE_READY = 4;
+    
+    /**
+     * Différents type de ligne de commande
+     */
+    const TYPE_QUOTATION_LINE_PRODUCT = 1;
+    const TYPE_QUOTATION_LINE_SERVICE = 2;
+    
+    public function __construct()
+    {
+        $this->features = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->state = self::QUOTATION_LINE_PENDING;
+        $this->pvHt = 0;
+        $this->pvTtc = 0;
+        $this->quantity = 1;
+        $this->discountRate = 0;
+    }
+
+    public function routingArray()
+    {
+        return array(
+            'quotationLineId' => $this->id,
+        );
+    }
+
+    public function __toString()
+    {
+        return "quotationLine #" . $this->id;
+    }
+    
+    /**
+     * Renvoyer la désignation complète de la ligne de devis
+     */
+    public function getDescription()
+    {
+        $string = '';
+        switch($this->type) {
+            case self::TYPE_QUOTATION_LINE_PRODUCT:
+                $product= $this->getProduct();
+                $string = $product ? $product->__toString() : $this->getDesign()->__toString();
+                break;
+            case self::TYPE_QUOTATION_LINE_SERVICE:
+                $string = $this->getService()->__toString();
+                break;
+            default:
+                break;
+        }
+        return $string;
+    }
+    
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * Hook timestampable behavior
+     * updates createdAt, updatedAt fields
+     */
+    use TimestampableEntity;
+    
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="position", type="integer")
+     */
+    private $position;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="type", type="integer", nullable=true)
+     * @Assert\NotBlank()
+     */
+    private $type;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pvHt", type="float", nullable=true)
+     * @Assert\NotBlank()
+     */
+    private $pvHt;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pvTtc", type="float", nullable=true)
+     * @Assert\NotBlank()
+     */
+    private $pvTtc;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="quantity", type="integer", nullable=true)
+     * @Assert\NotBlank()
+     */
+    private $quantity;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="engraving", type="string", length=255, nullable=true)
+     */
+    private $engraving;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="discountRate", type="float", nullable=true)
+     */
+    private $discountRate;
+    
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="comment", type="text", nullable=true)
+     */
+    private $comment;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="state", type="integer", nullable=true)
+     */
+    private $state;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Quotation",cascade={"persist"}, inversedBy="quotationLines")
+     * @ORM\JoinColumn(name="quotation_id", nullable=false, onDelete="CASCADE")
+     * @Assert\NotBlank()
+     */
+    private $quotation;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="Product",cascade={"persist"})
+     * @ORM\JoinColumn(name="product_id", nullable=true, onDelete="SET NULL")
+     */
+    private $product;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="Size",cascade={"persist"})
+     * @ORM\JoinColumn(name="size_id", nullable=true, onDelete="SET NULL")
+     */
+    private $size;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Design",cascade={"persist"})
+     * @ORM\JoinColumn(name="design_id", nullable=true, onDelete="SET NULL")
+     */
+    private $design;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="Feature", cascade={"persist"})
+     * @ORM\JoinTable(name="nsdh_quotation_line_feature")
+     */
+    private $features;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Service",cascade={"persist"})
+     * @ORM\JoinColumn(name="service_id", nullable=true, onDelete="SET NULL")
+     */
+    private $service;
+    
+    /**
+     * Vérifier cohérence des données
+     *
+     * @ORM\PrePersist()
+     * @ORM\PreUpdate()
+     */
+    public function checkDatas()
+    {
+        switch($this->type) {
+            case self::TYPE_QUOTATION_LINE_PRODUCT:
+                $this->setService(null);
+                break;
+            case self::TYPE_QUOTATION_LINE_SERVICE:
+                $this->setDesign(null);
+                $this->clearFeatures();
+                $this->setProduct(null);
+                $this->setSize(null);
+                $this->setEngraving(null);
+                break;
+            default:
+                break;
+        }
+    }
+    
+    /**
+     * Renvoie la des états disponibles de la licenec. 
+     * La classe et l'icon permettre un affichage customisé dans les vues
+     */
+    public function getStates() {
+        $states = array(
+            array(
+                'id' => self::QUOTATION_LINE_PENDING,
+                'label' => 'En attente',
+                'class' => 'grey white-text',
+                'icon' => 'fa fa-clock-o'
+            ),
+            array(
+                'id' => self::QUOTATION_LINE_BEGIN,
+                'label' => 'A produire',
+                'class' => 'blue white-text',
+                'icon' => 'fa fa-bolt'
+            ),
+            array(
+                'id' => self::QUOTATION_LINE_IN_PROGRESS,
+                'label' => 'En cours',
+                'class' => 'purple white-text',
+                'icon' => 'fa fa-spinner'
+            ),
+            array(
+                'id' => self::QUOTATION_LINE_READY,
+                'label' => 'Disponible',
+                'class' => 'green white-text',
+                'icon' => 'fa fa-check'
+            ),
+        );
+        
+        return $states;
+    }
+
+    /**
+     * Renvoie la liste des états pour l'affichage dans les formulaires
+     */
+    static public function getStateLabels(){
+        
+        $labels = array(
+            self::QUOTATION_LINE_PENDING => 'En attente',
+            self::QUOTATION_LINE_BEGIN => 'A produire',
+            self::QUOTATION_LINE_IN_PROGRESS=> 'En cours',
+            self::QUOTATION_LINE_READY => 'Prêt',
+        );
+        
+        return $labels;
+    }
+
+    /**
+     * Renvoie le label de l'état (les informations sont stockées dans la méthode "getStates()")
+     */
+    public function getStateLabel()
+    {
+        return $this->getStates()[$this->state]['label'];
+    }
+    
+    /**
+     * Renvoie la classe de l'état (les informations sont stockées dans la méthode "getStates()")
+     */
+    public function getStateClass()
+    {
+        return $this->getStates()[$this->state]['class'];
+    }
+    
+    /**
+     * Renvoie l'icon de l'état (les informations sont stockées dans la méthode "getStates()")
+     */
+    public function getStateIcon()
+    {
+        return $this->getStates()[$this->state]['icon'];
+    }
+    
+    
+    public function getStateHtmlLabel()
+    {
+        if ($this->state == null) {
+            return null;
+        }
+
+        return '<div class="chip '.$this->getStateClass().' lighten-3 white-text"><i class="fa '.$this->getStateIcon().' mr-5"></i>'.$this->getStateLabel().'</div>';
+    }
+    
+    
+     /**
+     * Renvoie la liste des types
+     */
+    static public function getTypeLabels(){
+        
+        $labels = array(
+            self::TYPE_QUOTATION_LINE_PRODUCT => 'Produit',
+            self::TYPE_QUOTATION_LINE_SERVICE => 'Service',
+        );
+        
+        return $labels;
+    }
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set position
+     *
+     * @param integer $position
+     *
+     * @return QuotationLine
+     */
+    public function setPosition($position)
+    {
+        $this->position = $position;
+
+        return $this;
+    }
+
+    /**
+     * Get position
+     *
+     * @return int
+     */
+    public function getPosition()
+    {
+        return $this->position;
+    }
+
+    /**
+     * Set type
+     *
+     * @param integer $type
+     *
+     * @return QuotationLine
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return int
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * Set pvHt
+     *
+     * @param float $pvHt
+     *
+     * @return QuotationLine
+     */
+    public function setPvHt($pvHt)
+    {
+        $this->pvHt = $pvHt;
+
+        return $this;
+    }
+
+    /**
+     * Get pvHt
+     *
+     * @return float
+     */
+    public function getPvHt()
+    {
+        return $this->pvHt;
+    }
+
+    /**
+     * Set pvTtc
+     *
+     * @param float $pvTtc
+     *
+     * @return QuotationLine
+     */
+    public function setPvTtc($pvTtc)
+    {
+        $this->pvTtc = $pvTtc;
+
+        return $this;
+    }
+
+    /**
+     * Get pvTtc
+     *
+     * @return float
+     */
+    public function getPvTtc()
+    {
+        return $this->pvTtc;
+    }
+
+    /**
+     * Set quantity
+     *
+     * @param integer $quantity
+     *
+     * @return QuotationLine
+     */
+    public function setQuantity($quantity)
+    {
+        $this->quantity = $quantity;
+
+        return $this;
+    }
+
+    /**
+     * Get quantity
+     *
+     * @return int
+     */
+    public function getQuantity()
+    {
+        return $this->quantity;
+    }
+
+    /**
+     * Set engraving
+     *
+     * @param string $engraving
+     *
+     * @return QuotationLine
+     */
+    public function setEngraving($engraving)
+    {
+        $this->engraving = $engraving;
+
+        return $this;
+    }
+
+    /**
+     * Get engraving
+     *
+     * @return string
+     */
+    public function getEngraving()
+    {
+        return $this->engraving;
+    }
+
+    /**
+     * Set discountRate
+     *
+     * @param float $discountRate
+     *
+     * @return QuotationLine
+     */
+    public function setDiscountRate($discountRate)
+    {
+        $this->discountRate = $discountRate;
+
+        return $this;
+    }
+
+    /**
+     * Get discountRate
+     *
+     * @return float
+     */
+    public function getDiscountRate()
+    {
+        return $this->discountRate;
+    }
+
+    /**
+     * Set comment
+     *
+     * @param string $comment
+     *
+     * @return QuotationLine
+     */
+    public function setComment($comment)
+    {
+        $this->comment = $comment;
+
+        return $this;
+    }
+
+    /**
+     * Get comment
+     *
+     * @return string
+     */
+    public function getComment()
+    {
+        return $this->comment;
+    }
+
+    /**
+     * Set state
+     *
+     * @param integer $state
+     *
+     * @return QuotationLine
+     */
+    public function setState($state)
+    {
+        $this->state = $state;
+
+        return $this;
+    }
+
+    /**
+     * Get state
+     *
+     * @return int
+     */
+    public function getState()
+    {
+        return $this->state;
+    }
+    
+    /**
+     * Set quotation
+     *
+     * @param \AppBundle\Entity\Quotation $quotation
+     *
+     * @return QuotationLine
+     */
+    public function setQuotation(\AppBundle\Entity\Quotation $quotation)
+    {
+        $this->quotation = $quotation;
+
+        return $this;
+    }
+
+    /**
+     * Get quotation
+     *
+     * @return \AppBundle\Entity\Quotation
+     */
+    public function getQuotation()
+    {
+        return $this->quotation;
+    }
+    
+    
+    /**
+     * Set product
+     *
+     * @param \AppBundle\Entity\Product $product
+     *
+     * @return QuotationLine
+     */
+    public function setProduct(\AppBundle\Entity\Product $product = null)
+    {
+        $this->product = $product;
+
+        return $this;
+    }
+
+    /**
+     * Get product
+     *
+     * @return \AppBundle\Entity\Product
+     */
+    public function getProduct()
+    {
+        return $this->product;
+    }
+    
+    
+    /**
+     * Set size
+     *
+     * @param \AppBundle\Entity\Size $size
+     *
+     * @return QuotationLine
+     */
+    public function setSize(\AppBundle\Entity\Size $size = null)
+    {
+        $this->size = $size;
+
+        return $this;
+    }
+
+    /**
+     * Get size
+     *
+     * @return \AppBundle\Entity\Size
+     */
+    public function getSize()
+    {
+        return $this->size;
+    }
+    
+    /**
+     * Set design
+     *
+     * @param \AppBundle\Entity\Design $design
+     *
+     * @return QuotationLine
+     */
+    public function setDesign(\AppBundle\Entity\Design $design = null)
+    {
+        $this->design = $design;
+
+        return $this;
+    }
+
+    /**
+     * Get design
+     *
+     * @return \AppBundle\Entity\Design
+     */
+    public function getDesign()
+    {
+        return $this->design;
+    }
+
+    /**
+     * Add feature
+     *
+     * @param \AppBundle\Entity\Feature $feature
+     *
+     * @return QuotationLine
+     */
+    public function addFeature(\AppBundle\Entity\Feature $feature)
+    {
+        $this->features[] = $feature;
+
+        return $this;
+    }
+
+    /**
+     * Remove feature
+     *
+     * @param \AppBundle\Entity\Feature $feature
+     */
+    public function removeFeature(\AppBundle\Entity\Feature $feature)
+    {
+        $this->features->removeElement($feature);
+    }
+
+    /**
+     * Get features
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getFeatures()
+    {
+        return $this->features;
+    }
+    
+    public function clearFeatures()
+    {
+        if($this->features) {
+            $this->features->clear();
+        }
+    }
+
+
+    /**
+     * Set service
+     *
+     * @param \AppBundle\Entity\Service $service
+     *
+     * @return QuotationLine
+     */
+    public function setService(\AppBundle\Entity\Service $service = null)
+    {
+        $this->service = $service;
+
+        return $this;
+    }
+
+    /**
+     * Get service
+     *
+     * @return \AppBundle\Entity\Service
+     */
+    public function getService()
+    {
+        return $this->service;
+    }
+
+
+}

@@ -1,0 +1,36 @@
+services:
+    bankin.api_handler:
+        class: BankinBundle\Services\ApiHandler
+        abstract:  true
+        arguments: [ 
+                    '@doctrine.orm.entity_manager',
+                    '@validator',
+                    '%bankin.base_uri%', 
+                    '%bankin.version%', 
+                    '%bankin.client.id%',  '%bankin.client.secret%'
+                    ]
+        calls:
+            - [setLogger, ['@logger']]
+            
+        
+    bankin.user_handler:
+        class: BankinBundle\Services\UserHandler
+        parent: bankin.api_handler
+        
+    bankin.bank_handler:
+        class: BankinBundle\Services\BankHandler
+        parent: bankin.api_handler
+        
+    bankin.category_handler:
+        class: BankinBundle\Services\CategoryHandler
+        parent: bankin.api_handler
+        
+    bankin.account_handler:
+        class: BankinBundle\Services\AccountHandler
+        parent: bankin.api_handler
+        arguments: ['@bankin.user_handler']
+        
+    bankin.transaction_handler:
+        class: BankinBundle\Services\TransactionHandler
+        parent: bankin.api_handler
+        arguments: ['@bankin.user_handler']

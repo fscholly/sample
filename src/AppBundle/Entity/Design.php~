@@ -1,0 +1,471 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+
+/**
+ * Design
+ *
+ * @ORM\Table(name="nsdh_design")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\DesignRepository")
+ * @UniqueEntity({"name","designType","feature"})
+ * @ORM\HasLifecycleCallbacks
+ */
+class Design
+{
+    public function __construct() {
+        $this->products = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->paHt = 0;
+        $this->paTtc = 0;
+        $this->pvHt = 0;
+        $this->pvTtc = 0;
+    }
+    
+    public function __toString() {
+        $featureName = $this->getFeature() ? ' ' . $this->getFeature()->getName() : '';
+        return $this->getDesignType()  . $featureName . ' - '. $this->name;
+    }
+    
+    public function routingArray()
+    {
+        return array(
+            'designId' => $this->id,
+        );
+    }
+    
+    /**
+     * Hook timestampable behavior
+     * updates createdAt, updatedAt fields
+     */
+    use TimestampableEntity;
+    
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    public $id;
+
+  
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    public $name;
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="code", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    private $code;
+
+    /**
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\Product", mappedBy="design", cascade={"remove"})
+     * @ORM\OrderBy({"createdAt" = "DESC"})
+     */
+    private $products;
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="official_name", type="string", length=255, nullable=true)
+     */
+    private $officialName;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="DesignType",cascade={"persist"})
+     * @ORM\JoinColumn(name="design_type_id", nullable=true, onDelete="SET NULL")
+     * @Assert\NotBlank()
+     */
+    public $designType;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="Feature",cascade={"persist"})
+     * @ORM\JoinColumn(name="feature_id", nullable=true, onDelete="SET NULL")
+     */
+    public $feature;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="Licence", inversedBy="designs", cascade={"persist"})
+     * @ORM\JoinColumn(name="licence_id", nullable=true, onDelete="CASCADE")
+     */
+    private $licence;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="Universe", inversedBy="designs", cascade={"persist"})
+     * @ORM\JoinColumn(name="universe_id", nullable=true, onDelete="CASCADE")
+     */
+    private $universe;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pa_ht", type="float", nullable=true)
+     */
+    private $paHt;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pa_ttc", type="float", nullable=true)
+     */
+    private $paTtc;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pv_ht", type="float", nullable=true)
+     */
+    private $pvHt;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pv_ttc", type="float", nullable=true)
+     */
+    private $pvTtc;
+    
+    
+    
+    public function setAutomaticValue()
+    {
+        $this->paHt = ($this->paTtc) ? floatval($this->paTtc / (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+        $this->pvHt = ($this->pvTtc) ? floatval($this->pvTtc / (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+//        // Mise à jour du montant de la tva collectée / facturée
+//        $this->paTtc = ($this->paHt) ? floatval($this->paHt * (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+//        $this->pvTtc = ($this->pvHt) ? floatval($this->pvHt * (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+    }
+    
+    /**
+     * Renvoie le nom complet
+     *
+     */
+    public function getFullName() {
+        return '#'. $this->id . ' - ' .$this->name;
+    }
+    
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set name
+     *
+     * @param string $name
+     *
+     * @return Design
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Get name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Set code
+     *
+     * @param string $code
+     *
+     * @return Design
+     */
+    public function setCode($code)
+    {
+        $this->code = $code;
+
+        return $this;
+    }
+
+    /**
+     * Get code
+     *
+     * @return string
+     */
+    public function getCode()
+    {
+        return $this->code;
+    }
+    
+     /**
+     * Add product.
+     *
+     * @param \AppBundle\Entity\Product $product
+     *
+     * @return Design
+     */
+    public function addProduct(\AppBundle\Entity\Product $product)
+    {
+        $this->products[] = $product;
+
+        return $this;
+    }
+
+    /**
+     * Remove product.
+     *
+     * @param \AppBundle\Entity\Product $product
+     */
+    public function removeProduct(\AppBundle\Entity\Product $product)
+    {
+        $this->products->removeElement($product);
+    }
+
+    /**
+     * Get products.
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getProducts()
+    {
+        return $this->products;
+    }
+    
+    /**
+     * Set officialName
+     *
+     * @param string $officialName
+     *
+     * @return Design
+     */
+    public function setOfficialName($officialName)
+    {
+        $this->officialName = $officialName;
+
+        return $this;
+    }
+    /**
+     * Get officialName
+     *
+     * @return string
+     */
+    public function getOfficialName()
+    {
+        return $this->officialName;
+    }
+    
+    /**
+     * Set DesignType
+     *
+     * @param \AppBundle\Entity\DesignType $designType
+     *
+     * @return Design
+     */
+    public function setDesignType($designType)
+    {
+        $this->designType = $designType;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \AppBundle\Entity\DesignType
+     */
+    public function getDesignType()
+    {
+        return $this->designType;
+    }
+    
+    /**
+     * Set Feature
+     *
+     * @param \AppBundle\Entity\Feature $feature
+     *
+     * @return Design
+     */
+    public function setFeature($feature)
+    {
+        $this->feature = $feature;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \AppBundle\Entity\Feature
+     */
+    public function getFeature()
+    {
+        return $this->feature;
+    }
+
+    
+    /**
+     * Set Licence
+     *
+     * @param \AppBundle\Entity\Licence $licence
+     *
+     * @return Design
+     */
+    public function setLicence($licence)
+    {
+        $this->licence = $licence;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \AppBundle\Entity\Licence
+     */
+    public function getLicence()
+    {
+        return $this->licence;
+    }
+    
+    
+    /**
+     * Set Universe
+     *
+     * @param \AppBundle\Entity\Universe $universe
+     *
+     * @return Design
+     */
+    public function setUniverse($universe)
+    {
+        $this->universe = $universe;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return \AppBundle\Entity\Universe
+     */
+    public function getUniverse()
+    {
+        return $this->universe;
+    }
+    
+
+    /**
+     * Set paHt
+     *
+     * @param float $paHt
+     *
+     * @return Design
+     */
+    public function setPaHt($paHt)
+    {
+        $this->paHt = $paHt;
+
+        return $this;
+    }
+
+    /**
+     * Get paHt
+     *
+     * @return float
+     */
+    public function getPaHt()
+    {
+        return $this->paHt;
+    }
+    
+      /**
+     * Set pvHt
+     *
+     * @param float $pvHt
+     *
+     * @return Design
+     */
+    public function setPvHt($pvHt)
+    {
+        $this->pvHt = $pvHt;
+
+        return $this;
+    }
+
+    /**
+     * Get pvHt
+     *
+     * @return float
+     */
+    public function getPvHt()
+    {
+        return $this->pvHt;
+    }
+    
+      /**
+     * Set paTtc
+     *
+     * @param float $paTtc
+     *
+     * @return Design
+     */
+    public function setPaTtc($paTtc)
+    {
+        $this->paTtc = $paTtc;
+
+        return $this;
+    }
+
+    /**
+     * Get paTtc
+     *
+     * @return float
+     */
+    public function getPaTtc()
+    {
+        return $this->paTtc;
+    }
+ 
+     /**
+     * Set pvTtc
+     *
+     * @param float $pvTtc
+     *
+     * @return Design
+     */
+    public function setPvTtc($pvTtc)
+    {
+        $this->pvTtc = $pvTtc;
+
+        return $this;
+    }
+
+    /**
+     * Get pvTtc
+     *
+     * @return float
+     */
+    public function getPvTtc()
+    {
+        return $this->pvTtc;
+    }
+    
+   
+}
+

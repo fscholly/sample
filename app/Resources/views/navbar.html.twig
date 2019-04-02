@@ -1,0 +1,88 @@
+{% set theme_color = configOption('NAVBAR_COLOR') %}
+<nav class="navbar-top {% if theme_color|default('') == 'dark' %}navbar-dark{% endif %}">
+    <div class="nav-wrapper">
+
+        <!-- Sidebar toggle -->
+        <a href="#" class="yay-toggle">
+            <div class="burg1"></div>
+            <div class="burg2"></div>
+            <div class="burg3"></div>
+        </a>
+        <!-- Sidebar toggle -->
+
+        <!-- Logo -->
+        <a href="{{ path('homepage') }}" class="brand-logo">
+            <img src="{{ config.appLogo.webPath | default('/images/logo-fond-clair.png') }}" class="h-50" alt="NSDH">
+        </a>
+        <!-- /Logo -->
+        <!-- Menu -->
+        <ul>
+            <li>
+                <a href="{{ path('quotation_new') }}" class="">
+                    <i class="mdi-action-add-shopping-cart"></i>
+                </a>
+            </li>
+            <li>
+                <!-- Nom de la page courante -->
+                {{ wo_render_breadcrumbs({ viewTemplate: "::breadcrumbs_title.html.twig" }) }}
+                 <ul class="dropdown-content">
+                    <li>
+                        <a href="{{ path('fos_user_profile_show') }}">
+                            <i class="mdi-action-account-box"></i> Ma page
+                        </a>
+                    </li>
+                    {% if is_granted("ROLE_ADMIN") %}
+                    <li>
+                        <a href="#!">
+                            <i class="fa fa-cogs"></i> Administration
+                        </a>
+                    </li>
+                    <li><a href=" {{ path('event_index') }}"><i class="fa fa-clock-o"></i> Historique</a></li>
+                    {% endif %}
+                    <li class="divider"></li>
+                    <li>
+                        <a href="{{ path('fos_user_security_logout') }}">
+                            <i class="fa fa-sign-out"></i> Déconnexion
+                        </a>
+                    </li>
+                </ul>
+                <!-- Nom de la page courante -->
+            </li>
+            <li>
+                <a href="#!" class="search-bar-toggle">
+                    <i class="mdi-action-help"></i>
+                </a>
+            </li>
+            {% if is_granted("IS_AUTHENTICATED_REMEMBERED") %}
+            <li class="user">
+                <a class="dropdown-button" data-activates="user-dropdown" href="#!">
+                    <img src="{{ app.user.photo.imageMedium.webPath | default('') }}" alt="{{ app.user.fullname}}" class="circle"> {{ app.user.username}} <i class="mdi-navigation-expand-more right"></i>
+                </a>
+
+                <ul id="user-dropdown" class="dropdown-content">
+                    <li>
+                        <a href="{{ path('fos_user_profile_show') }}">
+                            <i class="mdi-action-account-box"></i> Ma page
+                        </a>
+                    </li>
+                    {% if is_granted("ROLE_ADMIN") %}
+                    <li>
+                        <a href="#!">
+                            <i class="fa fa-cogs"></i> Administration
+                        </a>
+                    </li>
+                    <li><a href=" {{ path('event_index') }}"><i class="fa fa-clock-o"></i> Historique</a></li>
+                    {% endif %}
+                    <li class="divider"></li>
+                    <li>
+                        <a href="{{ path('fos_user_security_logout') }}">
+                            <i class="fa fa-sign-out"></i> Déconnexion
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            {% endif %}
+        </ul>
+        <!-- /Menu -->
+    </div>
+</nav>

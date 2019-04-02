@@ -1,0 +1,137 @@
+<?php
+
+namespace BankinBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
+/**
+ * BankinTransaction
+ *
+ * @ORM\Table(name="bankin_transaction")
+ * @ORM\Entity(repositoryClass="BankinBundle\Repository\BankinTransactionRepository")
+ * @UniqueEntity({"transactionId"})
+ */
+class BankinTransaction
+{
+    
+    public function __construct()
+    {
+    }
+
+    public function routingArray()
+    {
+        return array(
+            'bankinTransactionId' => $this->id,
+        );
+    }
+
+    public function __toString()
+    {
+        return "bankinTransaction #" . $this->id;
+    }
+    
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="transactionId", type="integer")
+     * @Assert\NotBlank()
+     */
+    private $transactionId;
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="description", type="string", length=255, nullable=true)
+     */
+    private $description;
+    
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="rawDescription", type="string", length=255, nullable=true)
+     */
+    private $rawDescription;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="amount", type="float", nullable=true)
+     */
+    private $amount;
+    
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="date", type="datetime", nullable=true)
+     */
+    private $date;
+    
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="updateDate", type="datetime", nullable=true)
+     */
+    private $updatedDate;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="BankinCategory",cascade={"persist"})
+     * @ORM\JoinColumn(name="bankin_category_id", nullable=true, onDelete="SET NULL")
+     */
+    private $bankinCategory;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="BankinAccount",cascade={"persist"})
+     * @ORM\JoinColumn(name="bankin_account_id", nullable=true, onDelete="SET NULL")
+     */
+    private $bankinAccount;
+
+    
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+
+    /**
+     * Set transactionId
+     *
+     * @param integer $transactionId
+     *
+     * @return BankinTransaction
+     */
+    public function setTransactionId($transactionId)
+    {
+        $this->transactionId = $transactionId;
+
+        return $this;
+    }
+
+    /**
+     * Get transactionId
+     *
+     * @return integer
+     */
+    public function getTransactionId()
+    {
+        return $this->transactionId;
+    }
+
+}

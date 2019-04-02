@@ -1,0 +1,50 @@
+{% if id is not defined %}{% set id = 'loader' %}{% endif %}
+{% if display is not defined %}{% set display = false %}{% endif %}
+{% if minHeight is not defined %}{% set minHeight = '100' %}{% endif %}
+<div id="{{ id }}" class="loader-container" style="{% if display == false %}display:none;{% endif %}min-height:{{ minHeight }}px">
+    <div class="preloader-wrapper big active">
+      <div class="spinner-layer spinner-blue">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer spinner-red">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer spinner-yellow">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer spinner-green">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<div id="{{ id }}_error" class="alert orange white-text lighten-2 mt-20" style="display:none">
+    Une erreur s'est produite. Veuillez recharger la page et contactez l'administrateur si le problème persiste
+</div>

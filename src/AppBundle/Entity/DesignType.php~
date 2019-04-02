@@ -1,0 +1,166 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
+/**
+ * DesignType
+ *
+ * @ORM\Table(name="nsdh_design_type")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\DesignTypeRepository")
+ * @UniqueEntity({"code"})
+ */
+class DesignType
+{
+    public function __toString() {
+        return $this->name;
+    }
+    
+    public function __construct(){
+        $this->sizes = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+    
+    public function routingArray()
+    {
+        return array(
+            'designTypeId' => $this->id,
+        );
+    }
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    public $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    public $name;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="code", type="string", length=255, unique=true)
+     * @Assert\NotBlank()
+     */
+    private $code;
+
+    
+    /**
+     * 
+     * @ORM\OneToMany(targetEntity="Size", mappedBy="designType", cascade={"remove"})
+     */
+    protected $sizes;
+    
+    /**
+     * Renvoie le nom complet
+     *
+     */
+    public function getFullName() {
+        return '#'. $this->id . ' - ' .$this->name;
+    }
+    
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set name
+     *
+     * @param string $name
+     *
+     * @return DesignType
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Get name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+    
+
+    /**
+     * Set code
+     *
+     * @param string $code
+     *
+     * @return DesignType
+     */
+    public function setCode($code)
+    {
+        $this->code = $code;
+
+        return $this;
+    }
+
+    /**
+     * Get code
+     *
+     * @return string
+     */
+    public function getCode()
+    {
+        return $this->code;
+    }
+    
+    
+    /**
+     * Add size
+     *
+     * @param \AppBundle\Entity\Size $size
+     * @return Dataset
+     */
+    public function addSize(\AppBundle\Entity\Size $size)
+    {
+        $this->sizes[] = $size;
+
+        return $this;
+    }
+
+    /**
+     * Remove size
+     *
+     * @param \AppBundle\Entity\Size $size
+     */
+    public function removeSize(\AppBundle\Entity\Size $size)
+    {
+        $this->sizes->removeElement($size);
+    }
+
+    /**
+     * Get sizes
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getSizes()
+    {
+        return $this->sizes;
+    }
+    
+}
+

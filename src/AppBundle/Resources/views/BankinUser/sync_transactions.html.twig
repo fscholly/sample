@@ -1,0 +1,72 @@
+{% extends 'AppBundle:Layout:layout.html.twig' %}
+
+{% block stylesheets %}
+<!-- Datatable -->  
+{{ include('AppBundle:Layout:_datatable_css.html.twig') }}
+
+{% endblock %}
+
+
+{% block main_content %}
+<!-- Product Helper -->
+<div class="row mt-10">
+    <div class="col s12">
+        <div class="card">
+            <div class="title">
+                <h5><i class="fa fa-bolt mr-10"></i>Listes des transactions synchronisées : {{ synced }} / {{ bankinTransactions| length }} pour le compte {{ bankinAccount.name }}</h5>
+                <a class="minimize" href="#"><i class="mdi-navigation-expand-less"></i></a> 
+            </div> 
+            <div class="content">
+                <table id="datatable" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Libellé</th>
+                            <th>Montant</th>
+                            <th>Catégorie</th>
+                            <th>Mis à jour</th>
+                            <th>Id</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for bankinTransaction in bankinTransactions %}
+                        <tr>
+                            <td>{{ bankinTransaction.date | date('d/m/Y') }}</td>
+                            <td>{{ bankinTransaction.description }}<br>
+                                {{ bankinTransaction.rawDescription }}</td>
+                            <td>{{ bankinTransaction.amount }}</td>
+                            <td>{{ bankinTransaction.bankinCategory.name }}</td>
+                            <td>{{ bankinTransaction.updateDate | date ('d/m/Y H:i:s') }}</td>
+                            <td>{{ bankinTransaction.transactionId }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>    
+            </div> 
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block javascript %}
+{{ include('AppBundle:Layout:_datatable_js.html.twig') }}
+
+<script type="text/javascript">
+jQuery(document).ready(function () {
+    "use strict";
+    
+    initTransactionList();
+    
+});
+
+function initTransactionList() {
+    var options = {
+        "cibFilter" : true
+    };
+    
+    CibDt.init(options);
+}
+
+</script>
+{%endblock%}

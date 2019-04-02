@@ -1,0 +1,54 @@
+{% extends 'security_layout.html.twig' %}
+{% trans_default_domain 'FOSUserBundle' %}
+{% block main_content %}
+    {% block fos_user_content %}
+    <section id="sign-up">
+        <!-- Background Bubbles -->
+        <canvas id="bubble-canvas"></canvas>
+        <!-- /Background Bubbles -->
+
+        <!-- Sign In Form -->
+        <form class="login-form" action="{{ path("fos_user_security_check") }}" method="post">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}" />
+            <div class="row links">
+                <div class="col s8 logo">
+                    <img src="{{ asset('images/logo-fond-fonce.png') }}" class="h-100" alt="NSDH">
+                </div>
+                <div class="col s4 right-align pt-30">- Connexion -</div>
+            </div>
+            <div class="card-panel clearfix">
+
+                {% if error %}
+                <div class="alert alert-border-left pink lighten-4 pink-text text-darken-2 mb-30">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                {% endif %}
+
+                <!-- Username -->
+                <div class="input-field">
+                    <i class="fa fa-user prefix"></i>
+                    <input id="username" name="_username" type="text" value="{{ last_username }}" class="validate pl-10">
+                    <label for="username" class="required">Login</label>
+                </div>
+                <!-- /Username -->
+
+                <!-- Password -->
+                <div class="input-field">
+                    <i class="fa fa-unlock-alt prefix"></i>
+                    <input id="password" name="_password" type="password" class="validate pl-10">
+                    <label for="password" class="required">Mot de passe</label>
+                </div>
+                <!-- /Password -->
+
+                <div class="switch">
+                    <label>
+                        <input type="checkbox" id="remember_me" name="_remember_me" value="on" />
+                        <span class="lever"></span>
+                        {{ 'security.login.remember_me'|trans }}
+                    </label>
+                </div>
+                <button type="submit" class="waves-effect waves-light btn z-depth-0 z-depth-1-hover green"><i class="fa fa-lock"></i> {{ 'security.login.submit'|trans }}</button>
+            </div>
+        </form>
+        <!-- /Sign In Form --> 
+    </section>
+    {% endblock fos_user_content %}
+{% endblock%}

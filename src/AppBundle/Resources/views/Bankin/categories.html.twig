@@ -1,0 +1,50 @@
+{% extends 'AppBundle:Layout:layout.html.twig' %}
+
+{% block stylesheets %}
+{% endblock %}
+
+
+{% block main_content %}
+<!-- Product Helper -->
+<div class="row mt-10">
+    <div class="col s12">
+        <div class="card">
+            <div class="title">
+                <h5><i class="fa fa-bolt mr-10"></i>Listes des catégories : {{ categories|length }}</h5>
+                <a class="minimize" href="#"><i class="mdi-navigation-expand-less"></i></a> 
+            </div> 
+            <div class="content">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Parent</th>
+                            <th>Nom</th>
+                            <th>Id</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for category in categories %}
+                        <tr>
+                            <td>{{ category['parent'] }}</td>
+                            <td>{{ category['name'] }}</td>
+                            <td>{{ category['id'] }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>    
+            </div> 
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block javascript %}
+
+<script type="text/javascript">
+$(document).ready(function() {
+    
+});
+
+</script>
+{%endblock%}

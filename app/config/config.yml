@@ -1,0 +1,154 @@
+imports:
+    - { resource: parameters.yml }
+    - { resource: security.yml }
+    - { resource: services.yml }
+    - { resource: "@AppBundle/Resources/config/services.yml" }
+    - { resource: "@BankinBundle/Resources/config/services.yml" }
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# http://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+    locale: fr
+
+app:    
+    contact:
+        customer: '%app_contact_customer%'
+        prod: '%app_contact_prod%'
+        admin: '%app_contact_admin%'
+        
+bankin:
+    base_uri: '%bankin_base_uri%'
+    version: '%bankin_version%'
+    client:
+        id: '%bankin_client_id%'
+        secret: '%bankin_client_secret%'
+        
+framework:
+    #esi:             ~
+    translator:      { fallbacks: ["%locale%"] }
+    secret:          "%secret%"
+    router:
+        resource: "%kernel.root_dir%/config/routing.yml"
+        strict_requirements: ~
+    form:            ~
+    csrf_protection: ~
+    validation:      { enable_annotations: true }
+    #serializer:      { enable_annotations: true }
+    templating:
+        engines: ['twig']
+        #assets_version: SomeVersionScheme
+    default_locale:  "%locale%"
+    trusted_hosts:   ~
+    trusted_proxies: ~
+    session:
+        # handler_id set to null will use default session handler from php.ini
+        handler_id:  ~
+        save_path:   "%kernel.root_dir%/../var/sessions/%kernel.environment%"
+    fragments:       ~
+    http_method_override: true
+    assets: ~
+
+# Twig Configuration
+twig:
+    debug:            "%kernel.debug%"
+    strict_variables: "%kernel.debug%"
+
+# Doctrine Configuration
+doctrine:
+    dbal:
+        driver:   pdo_mysql
+        host:     "%database_host%"
+        port:     "%database_port%"
+        dbname:   "%database_name%"
+        user:     "%database_user%"
+        password: "%database_password%"
+        charset:  UTF8
+        # if using pdo_sqlite as your database driver:
+        #   1. add the path in parameters.yml
+        #     e.g. database_path: "%kernel.root_dir%/data/data.db3"
+        #   2. Uncomment database_path in parameters.yml.dist
+        #   3. Uncomment next line:
+        #     path:     "%database_path%"
+
+    orm:
+        auto_generate_proxy_classes: "%kernel.debug%"
+        naming_strategy: doctrine.orm.naming_strategy.underscore
+        auto_mapping: true
+        dql:
+            string_functions:
+                MONTH: DoctrineExtensions\Query\Mysql\Month
+                YEAR: DoctrineExtensions\Query\Mysql\Year
+                DAY: DoctrineExtensions\Query\Mysql\Day
+                DATE: DoctrineExtensions\Query\Mysql\Date
+
+# Swiftmailer Configuration
+swiftmailer:
+    transport: "%mailer_transport%"
+    host:      "%mailer_host%"
+    username:  "%mailer_user%"
+    password:  "%mailer_password%"
+    auth_mode:  "%mailer_auth_mode%"
+    port:       "%mailer_port%"
+    encryption: "%mailer_encryption%"
+    spool:     { type: memory }
+
+    
+# FOS User Configuration   
+fos_user:
+    db_driver: orm
+    firewall_name: main
+    user_class: AppBundle\Entity\User
+    from_email:
+        address:        admin@des-heros.com
+        sender_name:    Administrateur NSDH
+    profile:
+        form:
+            type: AppBundle\Form\ProfileType
+    registration:
+        form:
+            type: AppBundle\Form\RegistrationType
+#    resetting:
+#        email:
+#            template:   email/password_resetting.email.twig
+            
+# Breadcrumbs Configuration
+white_october_breadcrumbs:
+    listClass: 'breadcrumb'
+    itemClass: 'breadcrumb-link'
+    viewTemplate: 'breadcrumbs.html.twig'
+    separator:          '<i class="fa fa-long-arrow-right"></i>'
+
+stof_doctrine_extensions:
+    default_locale: fr_FR
+    orm:
+        default:
+            tree: true
+            timestampable: true
+            
+            
+sensio_framework_extra:
+    request:     { converters: true, auto_convert: false }
+ 
+knp_snappy:
+    pdf:
+        enabled:    true
+        binary:     "%app.knp_snappy.pdf_binary%"
+           
+monolog:
+    channels : ['mailer','migration', 'notification']
+    handlers:
+        mailer:
+            level:    debug
+            type:     stream
+            path:     '%kernel.logs_dir%/%kernel.environment%.mailer.log'
+            channels: [mailer]
+        migration:
+            level:    debug
+            type:     stream
+            path:     '%kernel.logs_dir%/%kernel.environment%.migration.log'
+            channels: [migration]
+        notification:
+            level:    debug
+            type:     stream
+            path:     '%kernel.logs_dir%/%kernel.environment%.notification.log'
+            channels: [notification]

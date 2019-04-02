@@ -1,0 +1,22 @@
+{% set modalId = modalId | default('formModal') %}
+{% set loaderId = loaderId | default('formLoader') %}
+{% set focusId = focusId | default('entityId') %}
+{% set formDiv = formDiv | default('divForm') %}
+{% set saveButtonId = saveButtonId | default('saveButton') %}
+
+<div id="{{ modalId }}" class="modal {%if largeModal | default(null) %}bottom-sheet{% endif%}"> 
+    <a href="#!" class="fs-30 grey-text text-darken-2 modal-action modal-close waves-effect waves-light mt-30 mr-20 right"><i class="mdi-navigation-close mr-5"></i></a> 
+    <div class="modal-content"> 
+        {{ include('_loader.html.twig', {'id' : loaderId }) }}
+        <div id="{{ formDiv }}">
+            <!-- Chargement du formulaire en Ajax -->
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="btn grey modal-action modal-close waves-effect waves-light"><i class="fa fa-reply mr-5"></i> Annuler</a> 
+            <a id="{{ saveButtonId }}" href="#!" class="btn green waves-effect waves-light mr-10"><i class="fa fa-check mr-5"></i> Valider</a> 
+        </div> 
+    </div>
+</div>  
+        
+<!-- Champs cachés -->
+<input type="text" id="{{ focusId }}" class="hidden" />        

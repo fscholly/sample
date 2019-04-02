@@ -1,0 +1,75 @@
+{% extends 'AppBundle:Layout:layout.html.twig' %}
+
+{% block stylesheets %}
+{% endblock %}
+
+
+{% block main_content %}
+<!-- Product Helper -->
+<div class="row mt-10">
+    <div class="col s12">
+        <div class="card">
+            <div class="title">
+                <h5><i class="fa fa-bolt mr-10"></i>Sélectionner la banque que vous souhaitez synchroniser</h5>
+                <a class="minimize" href="#"><i class="mdi-navigation-expand-less"></i></a> 
+            </div> 
+            <div class="content">
+               f <b>Liste des comptes bancaires synchronisés</b>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Banque</th>
+                            <th>Intitulé</th>
+                            <th>Solde</th>
+                            <th>Type</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for account in accounts %}
+                        <tr>
+                            <td>{{ account['bank'] }}</td>
+                            <td>{{ account['name'] }}</td>
+                            <td>{{ account['balance'] }} {{ account['currency_code'] }}</td>
+                            <td>{{ account['type'] }}</td>
+                            <td><a class="btn" href="{{ path('bankin_user_account_test_transactions', {'accountId' : account['id']})}}">Consulter</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                    
+                <b>Suivre d'autre comptes</b>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Banque</th>
+                            <th>Pays</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                    </thead>
+                <tbody>
+                    {% for bank in banks %}
+                        <tr>
+                            <td>{{ bank['name'] }}</td>
+                            <td>{{ bank['country_code'] }}</td>
+                            <td><a class="btn blue white-text" href="{{ path('bankin_user_connect_item', {'bankId' : bank['id']})}}" target="_blank">Autoriser</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>    
+            </div> 
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block javascript %}
+
+<script type="text/javascript">
+$(document).ready(function() {
+    
+});
+
+</script>
+{%endblock%}

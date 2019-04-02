@@ -1,0 +1,11 @@
+{% form_theme form 'form_layout.html.twig' %}
+
+{% if form_field |default(null) %}
+    {% if label is defined %}<label>{{ label }}</label>{% endif %}
+        {{ form_widget(form_field.file) }}
+        {{ form_errors(form_field.file) }}
+    <div class="hidden">
+        {{ form_row(form_field.updatedAt) }}
+        {{ form_row(form_field.imageType) }}
+    </div>
+{% endif %}

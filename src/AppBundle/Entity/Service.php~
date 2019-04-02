@@ -1,0 +1,294 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+
+/**
+ * Service.
+ *
+ * @ORM\Table(name="nsdh_service")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\ServiceRepository")
+ * @ORM\HasLifecycleCallbacks
+ */
+class Service
+{
+    public function __construct()
+    {
+        $this->pvHt = 0;
+        $this->pvTtc = 0;
+    }
+
+    public function routingArray()
+    {
+        return array(
+            'serviceId' => $this->id,
+        );
+    }
+
+    public function __toString()
+    {
+        return $this->name;
+    }
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    public $id;
+
+    /*
+     * Hook timestampable behavior
+     * updates createdAt, updatedAt fields
+     */
+    use TimestampableEntity;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    public $name;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="description", type="text", nullable=true)
+     */
+    public $description;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="ServiceRange", cascade={"persist"}, inversedBy="services")
+     * @ORM\JoinColumn(onDelete="SET NULL", nullable=true)
+     */
+    public $range;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pv_ht", type="float", nullable=true)
+     */
+    private $pvHt;
+
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="pv_ttc", type="float", nullable=true)
+     */
+    private $pvTtc;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="Unit", cascade={"persist"})
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     */
+    private $unit;
+    
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="quantity", type="float", nullable=true)
+     */
+    private $quantity;
+
+    
+    public function setAutomaticValue()
+    {
+        $this->pvHt = ($this->pvTtc) ? floatval($this->pvTtc / (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+        // Mise à jour du montant de la tva collectée / facturée
+//        $this->pvTtc = ($this->pvHt) ? floatval($this->pvHt * (1 + \AppBundle\Entity\CompanyConfig::TVA_RATE)) : 0;
+    }
+    
+    /**
+     * Renvoie le nom complet
+     *
+     */
+    public function getFullName() {
+        return '#'. $this->id . ' - ' .$this->name;
+    }
+    
+    /**
+     * Get id.
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set name.
+     *
+     * @param string $name
+     *
+     * @return Service
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Get name.
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Set description.
+     *
+     * @param string $description
+     *
+     * @return Service
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * Get description.
+     *
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * Set range.
+     *
+     * @param \AppBundle\Entity\ServiceRange $range
+     *
+     * @return Service
+     */
+    public function setRange(\AppBundle\Entity\ServiceRange $range = null)
+    {
+        $this->range = $range;
+
+        return $this;
+    }
+
+    /**
+     * Get range.
+     *
+     * @return \AppBundle\Entity\ServiceRange
+     */
+    public function getRange()
+    {
+        return $this->range;
+    }
+
+    /**
+     * Set pvHt
+     *
+     * @param float $pvHt
+     *
+     * @return Service
+     */
+    public function setPvHt($pvHt)
+    {
+        $this->pvHt = $pvHt;
+
+        return $this;
+    }
+
+    /**
+     * Get pvHt
+     *
+     * @return float
+     */
+    public function getPvHt()
+    {
+        return $this->pvHt;
+    }
+
+    /**
+     * Set pvTtc
+     *
+     * @param float $pvTtc
+     *
+     * @return Service
+     */
+    public function setPvTtc($pvTtc)
+    {
+        $this->pvTtc = $pvTtc;
+
+        return $this;
+    }
+
+    /**
+     * Get pvTtc
+     *
+     * @return float
+     */
+    public function getPvTtc()
+    {
+        return $this->pvTtc;
+    }
+
+    /**
+     * Set unit
+     *
+     * @param \AppBundle\Entity\Unit $unit
+     *
+     * @return Service
+     */
+    public function setUnit(\AppBundle\Entity\Unit $unit = null)
+    {
+        $this->unit = $unit;
+
+        return $this;
+    }
+
+    /**
+     * Get unit
+     *
+     * @return \AppBundle\Entity\Unit
+     */
+    public function getUnit()
+    {
+        return $this->unit;
+    }
+
+
+    /**
+     * Set quantity
+     *
+     * @param float $quantity
+     *
+     * @return Service
+     */
+    public function setQuantity($quantity)
+    {
+        $this->quantity = $quantity;
+
+        return $this;
+    }
+
+    /**
+     * Get quantity
+     *
+     * @return float
+     */
+    public function getQuantity()
+    {
+        return $this->quantity;
+    }
+}

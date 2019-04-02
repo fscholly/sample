@@ -1,0 +1,20 @@
+{% form_theme form 'form_layout.html.twig' %}
+
+{{ form_start(form, {'attr': {'id': 'company_config_form'}}) }}    
+<div class="row mt-0">
+    <div class="col s12">
+        <div class="card">
+            <div class="title blue-text">
+                <h4><i class="fa fa-home mr-10"></i>Paramètres généraux</h4>
+            </div>
+            <div class="content">
+                {% for child in form %}
+                    {% if ( child.vars.attr["family"]|default(null)) == "GLOBAL" %}
+                        {{ form_row(child) }}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div> 
+{{ form_end(form) }}  

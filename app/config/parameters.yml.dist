@@ -1,0 +1,32 @@
+# This file is a "template" of what your parameters.yml file should look like
+# Set parameters here that may be different on each deployment target of the app, e.g. development, staging, production.
+# http://symfony.com/doc/current/best_practices/configuration.html#infrastructure-related-configuration
+parameters:
+    database_host:     127.0.0.1
+    database_port:     ~
+    database_name:     symfony
+    database_user:     root
+    database_password: ~
+    # You should uncomment this if you want use pdo_sqlite
+    # database_path: "%kernel.root_dir%/data.db3"
+
+    mailer_transport:  smtp
+    mailer_host:       127.0.0.1
+    mailer_user:       ~
+    mailer_password:   ~
+    mailer_auth_mode:  login
+    mailer_port: ~
+    mailer_encryption: ~
+
+    # A secret key that's used to generate certain security-related tokens
+    secret:            ThisTokenIsNotSoSecretChangeIt
+    app.knp_snappy.pdf_binary: ~
+
+    app_contact_customer: 'xxx@des-heros.com'
+    app_contact_prod: 'xxxx@des-heros.com'
+    app_contact_admin: 'xxxx@des-heros.com'
+
+    bankin_base_uri: "https://sync.bankin.com/v2/"
+    bankin_version: "2016-01-18"
+    bankin_client_id: xxxxxxx
+    bankin_client_secret: xxxxxxx

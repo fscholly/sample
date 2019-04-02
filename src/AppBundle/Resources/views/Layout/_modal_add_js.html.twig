@@ -1,0 +1,82 @@
+<!-- ID du conteneur de la liste des éléments -->
+{% set listDiv = listDiv | default('list') %}
+
+<!-- ID de la modal -->
+{% set modalId = modalId | default('formModal') %}
+
+<!-- ID du champ cachés du contact -->
+{% set focusId = focusId | default('entityId') %}
+
+<!-- ID/SELECTEUR des boutons -->
+{% set createButtonId = createButtonId | default('createButton') %}
+{% set selectButtonId = selectButtonId | default('selectButton') %}
+{% set saveButtonId = saveButtonId | default('saveButton') %}
+{% set addButtonSelector = addButtonSelector | default('.add-entity-button') %}
+
+<!-- ID du loader -->
+{% set loaderId = loaderId | default('formLoader') %}
+
+<!-- ID du conteneur du formulaire -->
+{% set formDiv = formDiv | default('divForm') %}
+<!-- ID du conteneur de l'input qui permet de sélectionner un élément existant -->
+{% set existingInputId = existingInputId | default('existingInputId') %}
+<!-- ID du conteneur du formulaire de création d'un nouvel élément -->
+{% set newDivId = newDivId | default('newDivId') %}
+
+<!-- INFOS sur l'entité liée -->
+{% set entityClass = entityClass | default('') %}
+{% set entityId = entityId | default(0) %}
+
+<!-- Nom de la fonction javascript qui permet de gérer l'élément courant -->
+{% set focusFunction = focusFunction | default('focusOn') %}
+
+<!-- NOM des fonctions AJAX -->
+{% set loadFormFunction = loadFormFunction | default('ajaxLoadForm') %}
+{% set submitFormFunction = submitFormFunction | default('ajaxSubmitForm') %}
+
+
+
+<!-- TEMPLATE qui contient les fonctions AJAX -->
+{{ include (formModalJs,  {
+    'listDiv': listDiv,
+    'modalId' : modalId,
+    'loaderId' : loaderId,
+    'focusId' : focusId,
+    'createButtonId' : createButtonId,
+    'selectButtonId' : selectButtonId,
+    'saveButtonId' : saveButtonId,
+    'addButtonSelector' : addButtonSelector,
+    'formDiv' : formDiv,
+    'existingInputId' : existingInputId,
+    'newDivId' : newDivId,
+    'focusFunction' : focusFunction,
+    'entityClass': entityClass,
+    'entityId': entityId,
+}) }}
+
+<script type="text/javascript">    
+    
+jQuery(document).ready(function () {
+    "use strict";
+    
+    // Bind du bouton "Ajouter"
+    $('{{ addButtonSelector }}').click(function(){
+        // ouverture de la modal
+        $('#{{ modalId }}').openModal();
+        
+        // affichage du loader
+        // chargement du formulaire en ajax
+        // cacher le loader
+        // afficher le formulaire
+        {{ loadFormFunction }}(0);
+        
+    })
+    
+    // Bind du bouton "Valider"
+    $('#{{ saveButtonId }}').click(function(){
+        {{ submitFormFunction }}();
+    });
+});
+
+
+</script>

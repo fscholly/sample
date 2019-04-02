@@ -1,0 +1,30 @@
+<table id="datatable" class="display table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Email</th>
+            <th class="nofilter w-100">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for user in users %}
+        <tr>
+            <td><a href="{{ path('user_show', user.routingArray) }}">{{ user.lastname }}</a></td>
+            <td>{{ user.firstname }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+                <div class="btn-group">
+                    <a class="waves-effect waves-light btn btn-small darken-1 tooltipped pr-10 pl-10" data-tooltip="Voir" data-delay="50" data-position="bottom" href="{{ path('user_show', user.routingArray) }}"><i class="fa fa-eye mr-5"></i></a>
+                    <a href="#!" class="waves-effect waves-light btn btn-small dropdown-button pr-10 pl-10" data-activates='dropdown{{ loop.index }}'>
+                        <span class="mdi-navigation-expand-more"></span>
+                    </a>
+                </div>
+                <ul id='dropdown{{ loop.index }}' class='dropdown-content w-200'>
+                    <li><a href="{{ path('user_edit', user.routingArray) }}"><i class="fa fa-pencil mr-5"></i>Editer</a></li>
+                </ul>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

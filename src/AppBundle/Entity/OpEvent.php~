@@ -1,0 +1,70 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+
+/**
+ * OpEvent
+ *
+ * @ORM\Table(name="nsdh_op_event")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\OpEventRepository")
+ */
+class OpEvent
+{
+    public function __toString() {
+        return $this->name;
+    }
+    
+    public function __construct(){
+    }
+    
+    public function routingArray()
+    {
+        return array(
+            'opEventId' => $this->id,
+        );
+    }
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    public $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255)
+     * @Assert\NotBlank()
+     */
+    public $name;
+    
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="start_date", type="datetime")
+     */
+    private $startDate;
+    
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="end_date", type="datetime", nullable=true)
+     */
+    private $endDate;
+    
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+    
+}

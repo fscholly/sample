@@ -1,0 +1,248 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+
+/**
+ * Payment
+ *
+ * @ORM\Table(name="nsdh_payment")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\PaymentRepository")
+ */
+class Payment
+{
+    /**
+     * Différents états de la ligne de commande
+     */
+    const PAYMENT_TYPE_CASH = 1;
+    const PAYMENT_TYPE_2_TIMES = 2;
+    const PAYMENT_TYPE_3_TIMES = 3;
+    const PAYMENT_TYPE_4_TIMES = 4;
+    const PAYMENT_TYPE_DELIVERY = 5;
+    
+    
+    public function __construct()
+    {
+        $this->type = self::PAYMENT_TYPE_CASH;
+        $this->paymentLines = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
+    public function routingArray()
+    {
+        return array(
+            'paymentId' => $this->id,
+        );
+    }
+
+    public function __toString()
+    {
+        return "paiement #" . $this->id;
+    }
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\Quotation", mappedBy="payment")
+     */
+    private $quotation;
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="type", type="integer")
+     * @Assert\NotBlank()
+     */
+    private $type;
+    
+    
+    /**
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\PaymentLine", mappedBy="payment", cascade={"persist","remove"})
+     * @ORM\OrderBy({"createdAt" = "ASC"})
+     */
+    private $paymentLines;
+
+
+    /**
+     * Renvoie la des types de paiements
+     * La classe et l'icon permettre un affichage customisé dans les vues
+     */
+    public function getTypes() {
+        $labels = $this->getTypeLabels();
+        
+        $types = array(
+            self::PAYMENT_TYPE_CASH => array(
+                'label' => $labels[self::PAYMENT_TYPE_CASH],
+                'class' => 'green white-text',
+                'icon' => 'fa fa-check'
+            ),
+            self::PAYMENT_TYPE_2_TIMES => array(
+                'label' => $labels[self::PAYMENT_TYPE_2_TIMES],
+                'class' => 'purple white-text',
+                'icon' => 'fa fa-spinner'
+            ),
+            self::PAYMENT_TYPE_3_TIMES => array(
+                'label' => $labels[self::PAYMENT_TYPE_3_TIMES],
+                'class' => 'purple white-text',
+                'icon' => 'fa fa-spinner'
+            ),
+            self::PAYMENT_TYPE_4_TIMES => array(
+                'label' => $labels[self::PAYMENT_TYPE_4_TIMES],
+                'class' => 'purple white-text',
+                'icon' => 'fa fa-spinner'
+            ),
+            self::PAYMENT_TYPE_DELIVERY => array(
+                'label' => $labels[self::PAYMENT_TYPE_DELIVERY],
+                'class' => 'white hrey-text',
+                'icon' => 'fa fa-bolt'
+            ),
+        );
+        
+        return $types;
+    }
+
+    /**
+     * Renvoie la liste des états pour l'affichage dans les formulaires
+     */
+    static public function getTypeLabels(){
+        
+        $labels = array(
+            self::PAYMENT_TYPE_CASH => 'Comptant',
+            self::PAYMENT_TYPE_2_TIMES => '2x sans frais',
+            self::PAYMENT_TYPE_3_TIMES => '3x sans frais',
+            self::PAYMENT_TYPE_4_TIMES => '4x sans frais',
+            self::PAYMENT_TYPE_4_TIMES => 'A la livraison',
+        );
+        
+        return $labels;
+    }
+
+    /**
+     * Renvoie le label de l'état (les informations sont stockées dans la méthode "getTypes()")
+     */
+    public function getTypeLabel()
+    {
+        return $this->getTypes()[$this->type]['label'];
+    }
+    
+    /**
+     * Renvoie la classe de l'état (les informations sont stockées dans la méthode "getTypes()")
+     */
+    public function getTypeClass()
+    {
+        return $this->getTypes()[$this->type]['class'];
+    }
+    
+    /**
+     * Renvoie l'icon de l'état (les informations sont stockées dans la méthode "getTypes()")
+     */
+    public function getTypeIcon()
+    {
+        return $this->getTypes()[$this->type]['icon'];
+    }
+    
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set quotation
+     *
+     * @param \AppBundle\Entity\Quotation $quotation
+     *
+     * @return Payment
+     */
+    public function setQuotation(\AppBundle\Entity\Quotation $quotation = null)
+    {
+        $this->quotation = $quotation;
+
+        return $this;
+    }
+
+    /**
+     * Get quotation
+     *
+     * @return \AppBundle\Entity\Quotation
+     */
+    public function getQuotation()
+    {
+        return $this->quotation;
+    }
+    
+    /**
+     * Set type
+     *
+     * @param integer $type
+     *
+     * @return Payment
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * Get type
+     *
+     * @return int
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+
+    /**
+     * Add paymentLine
+     *
+     * @param \AppBundle\Entity\PaymentLine $paymentLine
+     *
+     * @return Payment
+     */
+    public function addPaymentLine(\AppBundle\Entity\PaymentLine $paymentLine)
+    {
+        $this->paymentLines[] = $paymentLine;
+
+        return $this;
+    }
+
+    /**
+     * Remove paymentLine
+     *
+     * @param \AppBundle\Entity\PaymentLine $paymentLine
+     */
+    public function removePaymentLine(\AppBundle\Entity\PaymentLine $paymentLine)
+    {
+        $this->paymentLines->removeElement($paymentLine);
+    }
+
+    /**
+     * Get paymentLines
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getPaymentLines()
+    {
+        return $this->paymentLines;
+    }
+
+    
+}

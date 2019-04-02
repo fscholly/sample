@@ -1,0 +1,23 @@
+<!-- Message d'aide (point d'interrogation) -->
+{% macro help(content, class, position) %}
+    <i class="{{ class |default('ml-5 fs-16') }} fa fa-question-circle tooltipped" data-tooltip="{{ content }}" data-delay="50" data-position="{{ position | default('right') }}"></i>
+{% endmacro %}
+
+<!-- Affichage d'une date -->
+{% macro date(date, full) %}
+    {% set date_format %}d/m/Y{%if full%} H:i{% endif %}{% endset %}
+    {% if date %}
+        {{ date|date(date_format) }}
+    {% else %}
+        &nbsp;
+    {% endif %}
+{% endmacro %}
+
+<!-- Affichage d'un booléen -->
+{% macro boolean(value) %}
+    {% if value %}
+       <span class="chip green white-text fs-11 fw-600"><i class="fa fa-check mr-5"></i><span class="hide-on-small-only">Oui</span></span>
+    {% else %}
+       <span class="chip fs-11 fw-600"><i class="fa fa-remove mr-5"></i><span class="hide-on-small-only">Non</span></span>
+    {% endif %}
+{% endmacro %}

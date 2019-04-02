@@ -1,0 +1,23 @@
+{% form_theme form 'form_layout.html.twig' %}
+
+{% if form |default(null) %}
+<div class="image-cropper">
+    <div>
+        {% if label is defined %}<label>{{ label }}</label>{% endif %}
+        <span class="cropit-select-image btn btn-small white grey-text mb-15 ml-15">Parcourir</span>
+    </div>
+    {{ form_errors(form.photo.file) }}
+    <!-- Preview is relative positioned -->
+    <!-- Add a wrapper if you need to absolute position it -->
+    <div class="cropit-preview">
+    </div>
+    <!-- Zoom slider -->
+    <input type="range" class="cropit-image-zoom-input"/>
+    <div class="hidden">
+        <!-- File selector -->
+        {{ form_widget(form.photo.file) }}
+        {{ form_row(form.photo.updatedAt) }}
+        {{ form_rest(form.photo) }}
+    </div>
+</div>
+{% endif %}

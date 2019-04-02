@@ -1,0 +1,669 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
+/**
+ * Quotation
+ *
+ * @ORM\Table(name="nsdh_quotation")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\QuotationRepository")
+ * @UniqueEntity("number")
+ */
+class Quotation
+{
+    /**
+     * Différents états de la commande
+     */
+    const PROPOSAL_CONFIRM = 1;
+    const PROPOSAL_VALIDATED = 2;
+    const QUOTATION_PENDING = 3;
+    const QUOTATION_IN_PROGRESS = 4;
+    const QUOTATION_SHIPPING = 5;
+    const QUOTATION_SHIPPED = 6;
+    const QUOTATION_DELIVERED = 7;
+    const QUOTATION_CLOSED = 8;
+    const PROPOSAL_CANCELLED = 9;
+    const QUOTATION_ARCHIVED = 10;
+    
+    const INVOICE_TVA = 1;
+    const INVOICE_UE = 2;
+    const INVOICE_NOT_UE = 3;
+    
+    public function __construct()
+    {
+        $this->quotationLines = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->totalPvHt = 0;
+        $this->totalPvTtc = 0;
+        $this->state = self::PROPOSAL_CONFIRM;
+        $this->date = new \DateTime();
+        $this->payment = new \AppBundle\Entity\Payment();
+        $this->shipping = new \AppBundle\Entity\Shipping();
+        
+    }
+
+    public function routingArray()
+    {
+        return array(
+            'quotationId' => $this->id,
+        );
+    }
+
+    public function __toString()
+    {
+        return "quotation #" . $this->id;
+    }
+    
+    public function getReference() {
+        switch($this->state) {
+            case self::PROPOSAL_CONFIRM:
+            case self::PROPOSAL_VALIDATED:
+            case self::PROPOSAL_CANCELLED:
+                $string = "Devis";
+                break;
+            case self::QUOTATION_PENDING:
+            case self::QUOTATION_IN_PROGRESS:
+            case self::QUOTATION_SHIPPING:
+            case self::QUOTATION_SHIPPED:
+            case self::QUOTATION_DELIVERED:
+            case self::QUOTATION_CLOSED:
+                $string = "Commande";
+                break;
+            default:
+                $string = "Quotation";
+                break;
+        }
+        return $string . " " . $this->number;
+    }
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+    
+    /**
+     * Hook timestampable behavior
+     * updates createdAt, updatedAt fields
+     */
+    use TimestampableEntity;
+    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="number", type="string", length=255, nullable=true)
+     * @Assert\NotBlank()
+     */
+    private $number;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="totalPvHt", type="float", nullable=true)
+     * @Assert\NotBlank()
+     */
+    public $totalPvHt;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="totalPvTtc", type="float", nullable=true)
+     * @Assert\NotBlank()
+     */
+    public $totalPvTtc;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="date", type="datetime")
+     * @Assert\NotBlank()
+     */
+    private $date;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="discountRate", type="integer", nullable=true)
+     */
+    private $discountRate;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="description", type="text", nullable=true)
+     */
+    private $description;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="state", type="integer", nullable=true)
+     * @Assert\NotBlank()
+     */
+    private $state;
+    
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="Contact",cascade={"persist"}, inversedBy="quotations")
+     * @ORM\JoinColumn(name="contact_id", nullable=true, onDelete="SET NULL")
+     * @Assert\NotBlank()
+     */
+    private $contact;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="OpEvent",cascade={"persist"})
+     * @ORM\JoinColumn(name="op_event_id", nullable=true, onDelete="SET NULL")
+     */
+    private $opEvent;
+    
+    
+    /**
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\QuotationLine", mappedBy="quotation", cascade={"persist","remove"})
+     * @ORM\OrderBy({"position" = "ASC"})
+     */
+    private $quotationLines;
+    
+    /**
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\Payment", cascade={"persist", "remove"}, inversedBy="quotation")
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     */
+    private $payment;
+    
+    /**
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\Shipping", cascade={"persist", "remove"}, inversedBy="quotation")
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     */
+    private $shipping;
+    
+    /**
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\Invoice", cascade={"persist", "remove"}, inversedBy="quotation")
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     * @Assert\Valid()
+     */
+    private $invoice;
+    
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="typeInvoice", type="integer", nullable=true)
+     * @Assert\NotBlank()
+     */
+    private $typeInvoice;
+    
+    /**
+     * @Assert\Callback
+     */
+    public function checkPrice(ExecutionContextInterface $context)
+    {
+        if ($this->totalPvTtc < 0) {
+            $context->buildViolation('Prix doit être supérieure ou égale à 0')
+                    ->atPath('totalPvTtc')
+                    ->addViolation();
+        }
+    }
+    
+    /**
+     * Renvoie la des états disponibles de la licenec. 
+     * La classe et l'icon permettre un affichage customisé dans les vues
+     */
+    public function getStates() {
+        
+        $labels = $this->getStateLabels();
+        
+        $states = array(
+            self::PROPOSAL_CONFIRM => array(
+                'label' => $labels[self::PROPOSAL_CONFIRM],
+                'class' => 'orange white-text',
+                'icon' => 'fa fa-info-circle'
+            ),
+            self::PROPOSAL_VALIDATED => array(
+                'label' => $labels[self::PROPOSAL_VALIDATED],
+                'class' => 'yellow lighten-2 white-text',
+                'icon' => 'fa fa-file'
+            ),
+            self::QUOTATION_PENDING => array(
+                'label' => $labels[self::QUOTATION_PENDING],
+                'class' => 'grey darken-2 white-text',
+                'icon' => 'fa fa-clock-o'
+            ),
+            self::QUOTATION_IN_PROGRESS => array(
+                'label' => $labels[self::QUOTATION_IN_PROGRESS],
+                'class' => 'blue lighten-2 white-text',
+                'icon' => 'fa fa-spinner'
+            ),
+            self::QUOTATION_SHIPPING => array(
+                'label' => $labels[self::QUOTATION_SHIPPING],
+                'class' => 'blue darken-2 white-text',
+                'icon' => 'fa fa-flag-checkered'
+            ),
+            self::QUOTATION_SHIPPED => array(
+                'label' => $labels[self::QUOTATION_SHIPPED],
+                'class' => 'teal white-text',
+                'icon' => 'fa fa-paper-plane-o'
+            ),
+            self::QUOTATION_DELIVERED => array(
+                'label' => $labels[self::QUOTATION_DELIVERED],
+                'class' => 'green white-text',
+                'icon' => 'fa fa-check'
+            ),
+            self::QUOTATION_CLOSED => array(
+                'label' => $labels[self::QUOTATION_CLOSED],
+                'class' => 'green lighten-2 grey-text',
+                'icon' => 'fa fa-check-circle'
+            ),
+            self::PROPOSAL_CANCELLED => array(
+                'label' => $labels[self::PROPOSAL_CANCELLED],
+                'class' => 'red lighten-2 white-text',
+                'icon' => 'fa fa-times'
+            ),
+            self::QUOTATION_ARCHIVED => array(
+                'label' => $labels[self::QUOTATION_ARCHIVED],
+                'class' => 'black white-text',
+                'icon' => 'fa fa-archive'
+            ),
+        );
+        
+        return $states;
+    }
+
+    /**
+     * Renvoie la liste des états pour l'affichage dans les formulaires
+     */
+    static public function getStateLabels(){
+        
+        $labels = array(
+            self::PROPOSAL_CONFIRM => 'Devis à confirmer',
+            self::PROPOSAL_VALIDATED => 'Devis validé',
+            self::QUOTATION_PENDING => 'En attente',
+            self::QUOTATION_IN_PROGRESS => 'En cours',
+            self::QUOTATION_SHIPPING => 'A expédier',
+            self::QUOTATION_SHIPPED => 'Expédiée',
+            self::QUOTATION_DELIVERED => 'Livrée',
+            self::QUOTATION_CLOSED => 'Clôturée',
+            self::PROPOSAL_CANCELLED => 'Devis annulé',
+            self::QUOTATION_ARCHIVED => 'Archivée',
+        );
+        
+        return $labels;
+    }
+
+    /**
+     * Renvoie le label de l'état (les informations sont stockées dans la méthode "getStates()")
+     */
+    public function getStateLabel()
+    {
+        return $this->getStates()[$this->state]['label'];
+    }
+    
+    /**
+     * Renvoie la classe de l'état (les informations sont stockées dans la méthode "getStates()")
+     */
+    public function getStateClass()
+    {
+        return $this->getStates()[$this->state]['class'];
+    }
+    
+    /**
+     * Renvoie l'icon de l'état (les informations sont stockées dans la méthode "getStates()")
+     */
+    public function getStateIcon()
+    {
+        return $this->getStates()[$this->state]['icon'];
+    }
+    
+    public function getStateHtmlLabel()
+    {
+        if ($this->state == null) {
+            return null;
+        }
+
+        return '<div class="chip '.$this->getStateClass().' lighten-3 white-text"><i class="fa '.$this->getStateIcon().' mr-5"></i>'.$this->getStateLabel().'</div>';
+    }
+
+    public function getIsPaid() {
+        return ($this->payment->getAmount() >= $this->totalPvTtc) ? true : false;
+    }
+    /**
+     * Get id
+     *
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set number
+     *
+     * @param string $number
+     *
+     * @return Quotation
+     */
+    public function setNumber($number)
+    {
+        $this->number = $number;
+
+        return $this;
+    }
+
+    /**
+     * Get number
+     *
+     * @return string
+     */
+    public function getNumber()
+    {
+        return $this->number;
+    }
+
+    /**
+     * Set totalPvHt
+     *
+     * @param float $totalPvHt
+     *
+     * @return Quotation
+     */
+    public function setTotalPvHt($totalPvHt)
+    {
+        $this->totalPvHt = $totalPvHt;
+
+        return $this;
+    }
+
+    /**
+     * Get totalPvHt
+     *
+     * @return float
+     */
+    public function getTotalPvHt()
+    {
+        return $this->totalPvHt;
+    }
+
+    /**
+     * Set totalPvTtc
+     *
+     * @param float $totalPvTtc
+     *
+     * @return Quotation
+     */
+    public function setTotalPvTtc($totalPvTtc)
+    {
+        $this->totalPvTtc = $totalPvTtc;
+
+        return $this;
+    }
+
+    /**
+     * Get totalPvTtc
+     *
+     * @return float
+     */
+    public function getTotalPvTtc()
+    {
+        return $this->totalPvTtc;
+    }
+
+    /**
+     * Set date
+     *
+     * @param \DateTime $date
+     *
+     * @return Quotation
+     */
+    public function setDate($date)
+    {
+        $this->date = $date;
+
+        return $this;
+    }
+
+    /**
+     * Get date
+     *
+     * @return \DateTime
+     */
+    public function getDate()
+    {
+        return $this->date;
+    }
+
+    /**
+     * Set discountRate
+     *
+     * @param integer $discountRate
+     *
+     * @return Quotation
+     */
+    public function setDiscountRate($discountRate)
+    {
+        $this->discountRate = $discountRate;
+
+        return $this;
+    }
+
+    /**
+     * Get discountRate
+     *
+     * @return int
+     */
+    public function getDiscountRate()
+    {
+        return $this->discountRate;
+    }
+
+    /**
+     * Set description
+     *
+     * @param string $description
+     *
+     * @return Quotation
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * Get description
+     *
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * Set state
+     *
+     * @param integer $state
+     *
+     * @return Quotation
+     */
+    public function setState($state)
+    {
+        $this->state = $state;
+
+        return $this;
+    }
+
+    /**
+     * Get state
+     *
+     * @return int
+     */
+    public function getState()
+    {
+        return $this->state;
+    }
+
+    /**
+     * Set contact
+     *
+     * @param \AppBundle\Entity\Contact $contact
+     *
+     * @return Quotation
+     */
+    public function setContact(\AppBundle\Entity\Contact $contact = null)
+    {
+        $this->contact = $contact;
+
+        return $this;
+    }
+
+    /**
+     * Get contact
+     *
+     * @return \AppBundle\Entity\Contact
+     */
+    public function getContact()
+    {
+        return $this->contact;
+    }
+
+       /**
+     * Set opEvent
+     *
+     * @param \AppBundle\Entity\OpEvent $opEvent
+     *
+     * @return Quotation
+     */
+    public function setOpEvent(\AppBundle\Entity\OpEvent $opEvent = null)
+    {
+        $this->opEvent = $opEvent;
+
+        return $this;
+    }
+
+    /**
+     * Get opEvent
+     *
+     * @return \AppBundle\Entity\OpEvent
+     */
+    public function getOpEvent()
+    {
+        return $this->opEvent;
+    }
+    
+    /**
+     * Add quotationLine
+     *
+     * @param \AppBundle\Entity\QuotationLine $quotationLine
+     *
+     * @return Quotation
+     */
+    public function addQuotationLine(\AppBundle\Entity\QuotationLine $quotationLine)
+    {
+        $this->quotationLines[] = $quotationLine;
+
+        return $this;
+    }
+
+    /**
+     * Remove quotationLine
+     *
+     * @param \AppBundle\Entity\QuotationLine $quotationLine
+     */
+    public function removeQuotationLine(\AppBundle\Entity\QuotationLine $quotationLine)
+    {
+        $this->quotationLines->removeElement($quotationLine);
+    }
+
+    /**
+     * Get quotationLines
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getQuotationLines()
+    {
+        return $this->quotationLines;
+    }
+
+    /**
+     * Set payment
+     *
+     * @param \AppBundle\Entity\Payment $payment
+     *
+     * @return Quotation
+     */
+    public function setPayment(\AppBundle\Entity\Payment $payment = null)
+    {
+        $this->payment = $payment;
+
+        return $this;
+    }
+
+    /**
+     * Get payment
+     *
+     * @return \AppBundle\Entity\Payment
+     */
+    public function getPayment()
+    {
+        return $this->payment;
+    }
+
+    /**
+     * Set shipping
+     *
+     * @param \AppBundle\Entity\Shipping $shipping
+     *
+     * @return Quotation
+     */
+    public function setShipping(\AppBundle\Entity\Shipping $shipping = null)
+    {
+        $this->shipping = $shipping;
+
+        return $this;
+    }
+
+    /**
+     * Get shipping
+     *
+     * @return \AppBundle\Entity\Shipping
+     */
+    public function getShipping()
+    {
+        return $this->shipping;
+    }
+
+    /**
+     * Set invoice
+     *
+     * @param \AppBundle\Entity\Invoice $invoice
+     *
+     * @return Quotation
+     */
+    public function setInvoice(\AppBundle\Entity\Invoice $invoice = null)
+    {
+        $this->invoice = $invoice;
+
+        return $this;
+    }
+
+    /**
+     * Get invoice
+     *
+     * @return \AppBundle\Entity\Invoice
+     */
+    public function getInvoice()
+    {
+        return $this->invoice;
+    }
+
+ 
+}
